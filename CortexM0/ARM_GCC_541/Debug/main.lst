@@ -1,0 +1,1411 @@
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.moveTog,"ax",%progbits
+  20              		.align	2
+  21              		.global	moveTog
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	moveTog, %function
+  25              	moveTog:
+  26              	.LFB32:
+  27              		.file 1 "control.h"
+   1:control.h     **** /* ========================================
+   2:control.h     ****  *
+   3:control.h     ****  * Copyright SABRINA BUTTON, 2020
+   4:control.h     ****  * All Rights Reserved
+   5:control.h     ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:control.h     ****  *
+   7:control.h     ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:control.h     ****  * WHICH IS THE PROPERTY OF SABRINA BUTTON.
+   9:control.h     ****  *
+  10:control.h     ****  * ========================================*/
+  11:control.h     **** 
+  12:control.h     **** #include "project.h"
+  13:control.h     **** #ifndef MotorController_h
+  14:control.h     **** #define MotorController_h
+  15:control.h     ****     
+  16:control.h     ****     
+  17:control.h     **** #define max(a,b) \
+  18:control.h     ****    ({ __typeof__ (a) _a = (a); \
+  19:control.h     ****        __typeof__ (b) _b = (b); \
+  20:control.h     ****      _a > _b ? _a : _b; })
+  21:control.h     ****     
+  22:control.h     **** #define min(a,b) \
+  23:control.h     ****    ({ __typeof__ (a) _a = (a); \
+  24:control.h     ****        __typeof__ (b) _b = (b); \
+  25:control.h     ****      _a < _b ? _a : _b; })  
+  26:control.h     ****    
+  27:control.h     **** struct MotorController
+  28:control.h     **** {
+  29:control.h     ****     
+  30:control.h     ****     //pulse width modulation (pwm) and direction (dir) inputs for left (L) and right (R) motors
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 2
+
+
+  31:control.h     ****     void(*_pwmL_Write)(uint8); 
+  32:control.h     ****     void(*_pwmR_Write)(uint8); 
+  33:control.h     ****     void(*_dirL_Write)(uint8); 
+  34:control.h     ****     void(*_dirR_Write)(uint8); 
+  35:control.h     ****     
+  36:control.h     ****     //struct *_pwmL,*_dirL, *_pwmR, *_dirR;
+  37:control.h     ****     //current net speed 
+  38:control.h     ****     int _currentSpeed;
+  39:control.h     **** };
+  40:control.h     **** 
+  41:control.h     **** void moveTog(struct MotorController mc, uint8 speed){
+  28              		.loc 1 41 0
+  29              		.cfi_startproc
+  30              		@ args = 24, pretend = 16, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 84B0     		sub	sp, sp, #16
+  34              		.cfi_def_cfa_offset 16
+  35 0002 10B5     		push	{r4, lr}
+  36              		.cfi_def_cfa_offset 24
+  37              		.cfi_offset 4, -24
+  38              		.cfi_offset 14, -20
+  39 0004 0290     		str	r0, [sp, #8]
+  40 0006 0391     		str	r1, [sp, #12]
+  41 0008 0492     		str	r2, [sp, #16]
+  42 000a 0593     		str	r3, [sp, #20]
+  43 000c 07AB     		add	r3, sp, #28
+  44 000e 1C78     		ldrb	r4, [r3]
+  45              	.LVL1:
+  42:control.h     ****     //since both wheels are moving in unison, have net direction which both mc.dirX variables will 
+  43:control.h     ****     uint8 netDir = 0;
+  44:control.h     ****     
+  45:control.h     ****     if(speed != mc._currentSpeed){
+  46              		.loc 1 45 0
+  47 0010 069B     		ldr	r3, [sp, #24]
+  48 0012 9C42     		cmp	r4, r3
+  49 0014 09D0     		beq	.L2
+  50              	.LVL2:
+  51              	.LBB2:
+  46:control.h     ****         //if speed changes, update motor speed
+  47:control.h     ****         mc._currentSpeed = speed;
+  48:control.h     ****         
+  49:control.h     ****         if(speed < 0){
+  50:control.h     ****             netDir = 1;
+  51:control.h     ****             speed = min(speed, 0);
+  52:control.h     ****             speed = max(speed, -255);
+  53:control.h     ****             
+  54:control.h     ****             if(speed > -6) {speed = 0; netDir = 0;}
+  55:control.h     **** 		    else {speed = 255 + speed;}
+  56:control.h     ****         }
+  57:control.h     ****         
+  58:control.h     ****         else{ // fastest speed is 255 which is 255
+  59:control.h     **** 		    netDir = 0;
+  60:control.h     ****             speed = max(speed, 0); //70
+  52              		.loc 1 60 0
+  53 0016 002C     		cmp	r4, #0
+  54 0018 00DA     		bge	.L3
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 3
+
+
+  55 001a 0024     		movs	r4, #0
+  56              	.LVL3:
+  57              	.L3:
+  58              	.LBE2:
+  59              	.LBB3:
+  61:control.h     ****             speed = min(speed, 255);
+  60              		.loc 1 61 0
+  61 001c FF2C     		cmp	r4, #255
+  62 001e 00DD     		ble	.L4
+  63 0020 FF24     		movs	r4, #255
+  64              	.LVL4:
+  65              	.L4:
+  66              	.LBE3:
+  67 0022 E4B2     		uxtb	r4, r4
+  68              	.LVL5:
+  62:control.h     **** 			//speed = map(speed,0,255,_minPosSpeed,255);
+  63:control.h     **** 			if(speed < 6) {speed = 0; netDir = 0;}
+  69              		.loc 1 63 0
+  70 0024 052C     		cmp	r4, #5
+  71 0026 00D8     		bhi	.L2
+  72              	.LVL6:
+  73 0028 0024     		movs	r4, #0
+  74              	.LVL7:
+  75              	.L2:
+  64:control.h     ****         }
+  65:control.h     ****     }
+  66:control.h     ****     
+  67:control.h     ****     //write to the pins via pointer functions on passed mc
+  68:control.h     ****     (*mc._dirL_Write)(netDir);
+  76              		.loc 1 68 0
+  77 002a 0020     		movs	r0, #0
+  78 002c 049B     		ldr	r3, [sp, #16]
+  79 002e 9847     		blx	r3
+  80              	.LVL8:
+  69:control.h     ****     (*mc._dirR_Write)(netDir);
+  81              		.loc 1 69 0
+  82 0030 0020     		movs	r0, #0
+  83 0032 059B     		ldr	r3, [sp, #20]
+  84 0034 9847     		blx	r3
+  85              	.LVL9:
+  70:control.h     ****     (*mc._pwmL_Write)(speed);
+  86              		.loc 1 70 0
+  87 0036 2000     		movs	r0, r4
+  88 0038 029B     		ldr	r3, [sp, #8]
+  89 003a 9847     		blx	r3
+  90              	.LVL10:
+  71:control.h     ****     (*mc._pwmR_Write)(speed);
+  91              		.loc 1 71 0
+  92 003c 2000     		movs	r0, r4
+  93 003e 039B     		ldr	r3, [sp, #12]
+  94 0040 9847     		blx	r3
+  95              	.LVL11:
+  72:control.h     **** }
+  96              		.loc 1 72 0
+  97              		@ sp needed
+  98 0042 10BC     		pop	{r4}
+  99 0044 08BC     		pop	{r3}
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 4
+
+
+ 100 0046 04B0     		add	sp, sp, #16
+ 101 0048 1847     		bx	r3
+ 102              		.cfi_endproc
+ 103              	.LFE32:
+ 104              		.size	moveTog, .-moveTog
+ 105 004a C046     		.section	.text.stopMoving,"ax",%progbits
+ 106              		.align	2
+ 107              		.global	stopMoving
+ 108              		.code	16
+ 109              		.thumb_func
+ 110              		.type	stopMoving, %function
+ 111              	stopMoving:
+ 112              	.LFB33:
+  73:control.h     **** 
+  74:control.h     **** void stopMoving(struct MotorController mc){
+ 113              		.loc 1 74 0
+ 114              		.cfi_startproc
+ 115              		@ args = 20, pretend = 16, frame = 0
+ 116              		@ frame_needed = 0, uses_anonymous_args = 0
+ 117 0000 84B0     		sub	sp, sp, #16
+ 118              		.cfi_def_cfa_offset 16
+ 119 0002 10B5     		push	{r4, lr}
+ 120              		.cfi_def_cfa_offset 24
+ 121              		.cfi_offset 4, -24
+ 122              		.cfi_offset 14, -20
+ 123 0004 0290     		str	r0, [sp, #8]
+ 124 0006 0391     		str	r1, [sp, #12]
+ 125 0008 0492     		str	r2, [sp, #16]
+ 126 000a 0593     		str	r3, [sp, #20]
+  75:control.h     ****     //write to the pins via pointers
+  76:control.h     ****    (*mc._dirL_Write)(1);
+ 127              		.loc 1 76 0
+ 128 000c 0120     		movs	r0, #1
+ 129 000e 9047     		blx	r2
+ 130              	.LVL12:
+  77:control.h     ****    (*mc._dirR_Write)(1);
+ 131              		.loc 1 77 0
+ 132 0010 0120     		movs	r0, #1
+ 133 0012 059B     		ldr	r3, [sp, #20]
+ 134 0014 9847     		blx	r3
+ 135              	.LVL13:
+  78:control.h     ****    (*mc._pwmL_Write)(1);
+ 136              		.loc 1 78 0
+ 137 0016 0120     		movs	r0, #1
+ 138 0018 029B     		ldr	r3, [sp, #8]
+ 139 001a 9847     		blx	r3
+ 140              	.LVL14:
+  79:control.h     ****    (*mc._pwmR_Write)(1);
+ 141              		.loc 1 79 0
+ 142 001c 0120     		movs	r0, #1
+ 143 001e 039B     		ldr	r3, [sp, #12]
+ 144 0020 9847     		blx	r3
+ 145              	.LVL15:
+  80:control.h     ****     
+  81:control.h     ****     //reset speed to 0
+  82:control.h     ****     mc._currentSpeed = 0;
+  83:control.h     **** }
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 5
+
+
+ 146              		.loc 1 83 0
+ 147              		@ sp needed
+ 148 0022 10BC     		pop	{r4}
+ 149 0024 08BC     		pop	{r3}
+ 150 0026 04B0     		add	sp, sp, #16
+ 151 0028 1847     		bx	r3
+ 152              		.cfi_endproc
+ 153              	.LFE33:
+ 154              		.size	stopMoving, .-stopMoving
+ 155 002a C046     		.section	.text.main,"ax",%progbits
+ 156              		.align	2
+ 157              		.global	main
+ 158              		.code	16
+ 159              		.thumb_func
+ 160              		.type	main, %function
+ 161              	main:
+ 162              	.LFB34:
+ 163              		.file 2 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright SABRINA BUTTON, 2020
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF SABRINA BUTTON.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include "project.h"
+  13:main.c        **** #include "control.h"
+  14:main.c        **** 
+  15:main.c        **** int main(void)
+  16:main.c        **** {
+ 164              		.loc 2 16 0
+ 165              		.cfi_startproc
+ 166              		@ args = 0, pretend = 0, frame = 32
+ 167              		@ frame_needed = 0, uses_anonymous_args = 0
+ 168 0000 10B5     		push	{r4, lr}
+ 169              		.cfi_def_cfa_offset 8
+ 170              		.cfi_offset 4, -8
+ 171              		.cfi_offset 14, -4
+ 172 0002 8AB0     		sub	sp, sp, #40
+ 173              		.cfi_def_cfa_offset 48
+  17:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 174              		.loc 2 17 0
+ 175              		.syntax divided
+ 176              	@ 17 "main.c" 1
+ 177 0004 62B6     		CPSIE   i
+ 178              	@ 0 "" 2
+  18:main.c        **** 
+  19:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  20:main.c        ****    struct  MotorController mc;
+  21:main.c        ****     
+  22:main.c        ****    mc._pwmL_Write = &pwmA_Write;
+ 179              		.loc 2 22 0
+ 180              		.thumb
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 6
+
+
+ 181              		.syntax unified
+ 182 0006 154B     		ldr	r3, .L9
+ 183 0008 0593     		str	r3, [sp, #20]
+  23:main.c        ****    mc._pwmR_Write = &pwmB_Write;
+ 184              		.loc 2 23 0
+ 185 000a 154B     		ldr	r3, .L9+4
+ 186 000c 0693     		str	r3, [sp, #24]
+  24:main.c        ****    mc._dirL_Write = &dirA_Write;
+ 187              		.loc 2 24 0
+ 188 000e 154B     		ldr	r3, .L9+8
+ 189 0010 0793     		str	r3, [sp, #28]
+  25:main.c        ****    mc._dirR_Write = &dirB_Write;
+ 190              		.loc 2 25 0
+ 191 0012 154B     		ldr	r3, .L9+12
+ 192 0014 0893     		str	r3, [sp, #32]
+ 193              	.L8:
+  26:main.c        ****     
+  27:main.c        ****     
+  28:main.c        ****     for(;;)
+  29:main.c        ****     {
+  30:main.c        ****         /* Place your application code here. */
+  31:main.c        ****         BlueLED_Write(1);
+ 194              		.loc 2 31 0 discriminator 1
+ 195 0016 0120     		movs	r0, #1
+ 196 0018 FFF7FEFF 		bl	BlueLED_Write
+ 197              	.LVL16:
+  32:main.c        ****         moveTog(mc, 255);
+ 198              		.loc 2 32 0 discriminator 1
+ 199 001c FF23     		movs	r3, #255
+ 200 001e 0193     		str	r3, [sp, #4]
+ 201 0020 099B     		ldr	r3, [sp, #36]
+ 202 0022 0393     		str	r3, [sp, #12]
+ 203 0024 0093     		str	r3, [sp]
+ 204 0026 0598     		ldr	r0, [sp, #20]
+ 205 0028 0699     		ldr	r1, [sp, #24]
+ 206 002a 079A     		ldr	r2, [sp, #28]
+ 207 002c 089B     		ldr	r3, [sp, #32]
+ 208 002e FFF7FEFF 		bl	moveTog
+ 209              	.LVL17:
+  33:main.c        ****         CyDelay(5000);
+ 210              		.loc 2 33 0 discriminator 1
+ 211 0032 0E4C     		ldr	r4, .L9+16
+ 212 0034 2000     		movs	r0, r4
+ 213 0036 FFF7FEFF 		bl	CyDelay
+ 214              	.LVL18:
+  34:main.c        ****         
+  35:main.c        ****         BlueLED_Write(0);
+ 215              		.loc 2 35 0 discriminator 1
+ 216 003a 0020     		movs	r0, #0
+ 217 003c FFF7FEFF 		bl	BlueLED_Write
+ 218              	.LVL19:
+  36:main.c        ****         stopMoving(mc);
+ 219              		.loc 2 36 0 discriminator 1
+ 220 0040 099B     		ldr	r3, [sp, #36]
+ 221 0042 0393     		str	r3, [sp, #12]
+ 222 0044 0093     		str	r3, [sp]
+ 223 0046 0598     		ldr	r0, [sp, #20]
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 7
+
+
+ 224 0048 0699     		ldr	r1, [sp, #24]
+ 225 004a 079A     		ldr	r2, [sp, #28]
+ 226 004c 089B     		ldr	r3, [sp, #32]
+ 227 004e FFF7FEFF 		bl	stopMoving
+ 228              	.LVL20:
+  37:main.c        ****         CyDelay(5000);
+ 229              		.loc 2 37 0 discriminator 1
+ 230 0052 2000     		movs	r0, r4
+ 231 0054 FFF7FEFF 		bl	CyDelay
+ 232              	.LVL21:
+ 233 0058 DDE7     		b	.L8
+ 234              	.L10:
+ 235 005a C046     		.align	2
+ 236              	.L9:
+ 237 005c 00000000 		.word	pwmA_Write
+ 238 0060 00000000 		.word	pwmB_Write
+ 239 0064 00000000 		.word	dirA_Write
+ 240 0068 00000000 		.word	dirB_Write
+ 241 006c 88130000 		.word	5000
+ 242              		.cfi_endproc
+ 243              	.LFE34:
+ 244              		.size	main, .-main
+ 245              		.text
+ 246              	.Letext0:
+ 247              		.file 3 "Generated_Source\\PSoC4/BlueLED.h"
+ 248              		.file 4 "Generated_Source\\PSoC4/CyLib.h"
+ 249              		.file 5 "Generated_Source\\PSoC4/cytypes.h"
+ 250              		.section	.debug_info,"",%progbits
+ 251              	.Ldebug_info0:
+ 252 0000 DD020000 		.4byte	0x2dd
+ 253 0004 0400     		.2byte	0x4
+ 254 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 255 000a 04       		.byte	0x4
+ 256 000b 01       		.uleb128 0x1
+ 257 000c 08010000 		.4byte	.LASF25
+ 258 0010 0C       		.byte	0xc
+ 259 0011 B3010000 		.4byte	.LASF26
+ 260 0015 B3000000 		.4byte	.LASF27
+ 261 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 262 001d 00000000 		.4byte	0
+ 263 0021 00000000 		.4byte	.Ldebug_line0
+ 264 0025 02       		.uleb128 0x2
+ 265 0026 01       		.byte	0x1
+ 266 0027 06       		.byte	0x6
+ 267 0028 FA010000 		.4byte	.LASF0
+ 268 002c 02       		.uleb128 0x2
+ 269 002d 01       		.byte	0x1
+ 270 002e 08       		.byte	0x8
+ 271 002f 38000000 		.4byte	.LASF1
+ 272 0033 02       		.uleb128 0x2
+ 273 0034 02       		.byte	0x2
+ 274 0035 05       		.byte	0x5
+ 275 0036 BF010000 		.4byte	.LASF2
+ 276 003a 02       		.uleb128 0x2
+ 277 003b 02       		.byte	0x2
+ 278 003c 07       		.byte	0x7
+ 279 003d 17000000 		.4byte	.LASF3
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 8
+
+
+ 280 0041 02       		.uleb128 0x2
+ 281 0042 04       		.byte	0x4
+ 282 0043 05       		.byte	0x5
+ 283 0044 E5010000 		.4byte	.LASF4
+ 284 0048 02       		.uleb128 0x2
+ 285 0049 04       		.byte	0x4
+ 286 004a 07       		.byte	0x7
+ 287 004b 46000000 		.4byte	.LASF5
+ 288 004f 02       		.uleb128 0x2
+ 289 0050 08       		.byte	0x8
+ 290 0051 05       		.byte	0x5
+ 291 0052 A5010000 		.4byte	.LASF6
+ 292 0056 02       		.uleb128 0x2
+ 293 0057 08       		.byte	0x8
+ 294 0058 07       		.byte	0x7
+ 295 0059 F1000000 		.4byte	.LASF7
+ 296 005d 03       		.uleb128 0x3
+ 297 005e 04       		.byte	0x4
+ 298 005f 05       		.byte	0x5
+ 299 0060 696E7400 		.ascii	"int\000"
+ 300 0064 02       		.uleb128 0x2
+ 301 0065 04       		.byte	0x4
+ 302 0066 07       		.byte	0x7
+ 303 0067 9A000000 		.4byte	.LASF8
+ 304 006b 04       		.uleb128 0x4
+ 305 006c 58000000 		.4byte	.LASF28
+ 306 0070 05       		.byte	0x5
+ 307 0071 F701     		.2byte	0x1f7
+ 308 0073 2C000000 		.4byte	0x2c
+ 309 0077 02       		.uleb128 0x2
+ 310 0078 04       		.byte	0x4
+ 311 0079 04       		.byte	0x4
+ 312 007a 32000000 		.4byte	.LASF9
+ 313 007e 02       		.uleb128 0x2
+ 314 007f 08       		.byte	0x8
+ 315 0080 04       		.byte	0x4
+ 316 0081 78000000 		.4byte	.LASF10
+ 317 0085 02       		.uleb128 0x2
+ 318 0086 01       		.byte	0x1
+ 319 0087 08       		.byte	0x8
+ 320 0088 BA010000 		.4byte	.LASF11
+ 321 008c 02       		.uleb128 0x2
+ 322 008d 04       		.byte	0x4
+ 323 008e 07       		.byte	0x7
+ 324 008f 9C010000 		.4byte	.LASF12
+ 325 0093 02       		.uleb128 0x2
+ 326 0094 08       		.byte	0x8
+ 327 0095 04       		.byte	0x4
+ 328 0096 EE010000 		.4byte	.LASF13
+ 329 009a 05       		.uleb128 0x5
+ 330 009b D5010000 		.4byte	.LASF29
+ 331 009f 14       		.byte	0x14
+ 332 00a0 01       		.byte	0x1
+ 333 00a1 1B       		.byte	0x1b
+ 334 00a2 E3000000 		.4byte	0xe3
+ 335 00a6 06       		.uleb128 0x6
+ 336 00a7 A7000000 		.4byte	.LASF14
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 9
+
+
+ 337 00ab 01       		.byte	0x1
+ 338 00ac 1F       		.byte	0x1f
+ 339 00ad EE000000 		.4byte	0xee
+ 340 00b1 00       		.byte	0
+ 341 00b2 06       		.uleb128 0x6
+ 342 00b3 0B000000 		.4byte	.LASF15
+ 343 00b7 01       		.byte	0x1
+ 344 00b8 20       		.byte	0x20
+ 345 00b9 EE000000 		.4byte	0xee
+ 346 00bd 04       		.byte	0x4
+ 347 00be 06       		.uleb128 0x6
+ 348 00bf C9010000 		.4byte	.LASF16
+ 349 00c3 01       		.byte	0x1
+ 350 00c4 21       		.byte	0x21
+ 351 00c5 EE000000 		.4byte	0xee
+ 352 00c9 08       		.byte	0x8
+ 353 00ca 06       		.uleb128 0x6
+ 354 00cb 5E000000 		.4byte	.LASF17
+ 355 00cf 01       		.byte	0x1
+ 356 00d0 22       		.byte	0x22
+ 357 00d1 EE000000 		.4byte	0xee
+ 358 00d5 0C       		.byte	0xc
+ 359 00d6 06       		.uleb128 0x6
+ 360 00d7 84000000 		.4byte	.LASF18
+ 361 00db 01       		.byte	0x1
+ 362 00dc 26       		.byte	0x26
+ 363 00dd 5D000000 		.4byte	0x5d
+ 364 00e1 10       		.byte	0x10
+ 365 00e2 00       		.byte	0
+ 366 00e3 07       		.uleb128 0x7
+ 367 00e4 EE000000 		.4byte	0xee
+ 368 00e8 08       		.uleb128 0x8
+ 369 00e9 6B000000 		.4byte	0x6b
+ 370 00ed 00       		.byte	0
+ 371 00ee 09       		.uleb128 0x9
+ 372 00ef 04       		.byte	0x4
+ 373 00f0 E3000000 		.4byte	0xe3
+ 374 00f4 0A       		.uleb128 0xa
+ 375 00f5 92000000 		.4byte	.LASF21
+ 376 00f9 01       		.byte	0x1
+ 377 00fa 29       		.byte	0x29
+ 378 00fb 00000000 		.4byte	.LFB32
+ 379 00ff 4A000000 		.4byte	.LFE32-.LFB32
+ 380 0103 01       		.uleb128 0x1
+ 381 0104 9C       		.byte	0x9c
+ 382 0105 D0010000 		.4byte	0x1d0
+ 383 0109 0B       		.uleb128 0xb
+ 384 010a 6D6300   		.ascii	"mc\000"
+ 385 010d 01       		.byte	0x1
+ 386 010e 29       		.byte	0x29
+ 387 010f 9A000000 		.4byte	0x9a
+ 388 0113 02       		.uleb128 0x2
+ 389 0114 91       		.byte	0x91
+ 390 0115 70       		.sleb128 -16
+ 391 0116 0C       		.uleb128 0xc
+ 392 0117 96010000 		.4byte	.LASF19
+ 393 011b 01       		.byte	0x1
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 10
+
+
+ 394 011c 29       		.byte	0x29
+ 395 011d 6B000000 		.4byte	0x6b
+ 396 0121 00000000 		.4byte	.LLST0
+ 397 0125 0D       		.uleb128 0xd
+ 398 0126 06020000 		.4byte	.LASF20
+ 399 012a 01       		.byte	0x1
+ 400 012b 2B       		.byte	0x2b
+ 401 012c 6B000000 		.4byte	0x6b
+ 402 0130 00       		.byte	0
+ 403 0131 0E       		.uleb128 0xe
+ 404 0132 16000000 		.4byte	.LBB2
+ 405 0136 06000000 		.4byte	.LBE2-.LBB2
+ 406 013a 5B010000 		.4byte	0x15b
+ 407 013e 0F       		.uleb128 0xf
+ 408 013f 5F6100   		.ascii	"_a\000"
+ 409 0142 01       		.byte	0x1
+ 410 0143 3C       		.byte	0x3c
+ 411 0144 6B000000 		.4byte	0x6b
+ 412 0148 36000000 		.4byte	.LLST1
+ 413 014c 0F       		.uleb128 0xf
+ 414 014d 5F6200   		.ascii	"_b\000"
+ 415 0150 01       		.byte	0x1
+ 416 0151 3C       		.byte	0x3c
+ 417 0152 5D000000 		.4byte	0x5d
+ 418 0156 6C000000 		.4byte	.LLST2
+ 419 015a 00       		.byte	0
+ 420 015b 0E       		.uleb128 0xe
+ 421 015c 1C000000 		.4byte	.LBB3
+ 422 0160 06000000 		.4byte	.LBE3-.LBB3
+ 423 0164 85010000 		.4byte	0x185
+ 424 0168 0F       		.uleb128 0xf
+ 425 0169 5F6100   		.ascii	"_a\000"
+ 426 016c 01       		.byte	0x1
+ 427 016d 3D       		.byte	0x3d
+ 428 016e 6B000000 		.4byte	0x6b
+ 429 0172 80000000 		.4byte	.LLST3
+ 430 0176 0F       		.uleb128 0xf
+ 431 0177 5F6200   		.ascii	"_b\000"
+ 432 017a 01       		.byte	0x1
+ 433 017b 3D       		.byte	0x3d
+ 434 017c 5D000000 		.4byte	0x5d
+ 435 0180 93000000 		.4byte	.LLST4
+ 436 0184 00       		.byte	0
+ 437 0185 10       		.uleb128 0x10
+ 438 0186 30000000 		.4byte	.LVL8
+ 439 018a 03       		.uleb128 0x3
+ 440 018b 91       		.byte	0x91
+ 441 018c 58       		.sleb128 -40
+ 442 018d 06       		.byte	0x6
+ 443 018e 98010000 		.4byte	0x198
+ 444 0192 11       		.uleb128 0x11
+ 445 0193 01       		.uleb128 0x1
+ 446 0194 50       		.byte	0x50
+ 447 0195 01       		.uleb128 0x1
+ 448 0196 30       		.byte	0x30
+ 449 0197 00       		.byte	0
+ 450 0198 10       		.uleb128 0x10
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 11
+
+
+ 451 0199 36000000 		.4byte	.LVL9
+ 452 019d 03       		.uleb128 0x3
+ 453 019e 91       		.byte	0x91
+ 454 019f 5C       		.sleb128 -36
+ 455 01a0 06       		.byte	0x6
+ 456 01a1 AB010000 		.4byte	0x1ab
+ 457 01a5 11       		.uleb128 0x11
+ 458 01a6 01       		.uleb128 0x1
+ 459 01a7 50       		.byte	0x50
+ 460 01a8 01       		.uleb128 0x1
+ 461 01a9 30       		.byte	0x30
+ 462 01aa 00       		.byte	0
+ 463 01ab 10       		.uleb128 0x10
+ 464 01ac 3C000000 		.4byte	.LVL10
+ 465 01b0 03       		.uleb128 0x3
+ 466 01b1 91       		.byte	0x91
+ 467 01b2 50       		.sleb128 -48
+ 468 01b3 06       		.byte	0x6
+ 469 01b4 BF010000 		.4byte	0x1bf
+ 470 01b8 11       		.uleb128 0x11
+ 471 01b9 01       		.uleb128 0x1
+ 472 01ba 50       		.byte	0x50
+ 473 01bb 02       		.uleb128 0x2
+ 474 01bc 74       		.byte	0x74
+ 475 01bd 00       		.sleb128 0
+ 476 01be 00       		.byte	0
+ 477 01bf 12       		.uleb128 0x12
+ 478 01c0 42000000 		.4byte	.LVL11
+ 479 01c4 03       		.uleb128 0x3
+ 480 01c5 91       		.byte	0x91
+ 481 01c6 54       		.sleb128 -44
+ 482 01c7 06       		.byte	0x6
+ 483 01c8 11       		.uleb128 0x11
+ 484 01c9 01       		.uleb128 0x1
+ 485 01ca 50       		.byte	0x50
+ 486 01cb 02       		.uleb128 0x2
+ 487 01cc 74       		.byte	0x74
+ 488 01cd 00       		.sleb128 0
+ 489 01ce 00       		.byte	0
+ 490 01cf 00       		.byte	0
+ 491 01d0 0A       		.uleb128 0xa
+ 492 01d1 00000000 		.4byte	.LASF22
+ 493 01d5 01       		.byte	0x1
+ 494 01d6 4A       		.byte	0x4a
+ 495 01d7 00000000 		.4byte	.LFB33
+ 496 01db 2A000000 		.4byte	.LFE33-.LFB33
+ 497 01df 01       		.uleb128 0x1
+ 498 01e0 9C       		.byte	0x9c
+ 499 01e1 3B020000 		.4byte	0x23b
+ 500 01e5 0B       		.uleb128 0xb
+ 501 01e6 6D6300   		.ascii	"mc\000"
+ 502 01e9 01       		.byte	0x1
+ 503 01ea 4A       		.byte	0x4a
+ 504 01eb 9A000000 		.4byte	0x9a
+ 505 01ef 02       		.uleb128 0x2
+ 506 01f0 91       		.byte	0x91
+ 507 01f1 70       		.sleb128 -16
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 12
+
+
+ 508 01f2 10       		.uleb128 0x10
+ 509 01f3 10000000 		.4byte	.LVL12
+ 510 01f7 03       		.uleb128 0x3
+ 511 01f8 91       		.byte	0x91
+ 512 01f9 58       		.sleb128 -40
+ 513 01fa 06       		.byte	0x6
+ 514 01fb 05020000 		.4byte	0x205
+ 515 01ff 11       		.uleb128 0x11
+ 516 0200 01       		.uleb128 0x1
+ 517 0201 50       		.byte	0x50
+ 518 0202 01       		.uleb128 0x1
+ 519 0203 31       		.byte	0x31
+ 520 0204 00       		.byte	0
+ 521 0205 10       		.uleb128 0x10
+ 522 0206 16000000 		.4byte	.LVL13
+ 523 020a 03       		.uleb128 0x3
+ 524 020b 91       		.byte	0x91
+ 525 020c 5C       		.sleb128 -36
+ 526 020d 06       		.byte	0x6
+ 527 020e 18020000 		.4byte	0x218
+ 528 0212 11       		.uleb128 0x11
+ 529 0213 01       		.uleb128 0x1
+ 530 0214 50       		.byte	0x50
+ 531 0215 01       		.uleb128 0x1
+ 532 0216 31       		.byte	0x31
+ 533 0217 00       		.byte	0
+ 534 0218 10       		.uleb128 0x10
+ 535 0219 1C000000 		.4byte	.LVL14
+ 536 021d 03       		.uleb128 0x3
+ 537 021e 91       		.byte	0x91
+ 538 021f 50       		.sleb128 -48
+ 539 0220 06       		.byte	0x6
+ 540 0221 2B020000 		.4byte	0x22b
+ 541 0225 11       		.uleb128 0x11
+ 542 0226 01       		.uleb128 0x1
+ 543 0227 50       		.byte	0x50
+ 544 0228 01       		.uleb128 0x1
+ 545 0229 31       		.byte	0x31
+ 546 022a 00       		.byte	0
+ 547 022b 12       		.uleb128 0x12
+ 548 022c 22000000 		.4byte	.LVL15
+ 549 0230 03       		.uleb128 0x3
+ 550 0231 91       		.byte	0x91
+ 551 0232 54       		.sleb128 -44
+ 552 0233 06       		.byte	0x6
+ 553 0234 11       		.uleb128 0x11
+ 554 0235 01       		.uleb128 0x1
+ 555 0236 50       		.byte	0x50
+ 556 0237 01       		.uleb128 0x1
+ 557 0238 31       		.byte	0x31
+ 558 0239 00       		.byte	0
+ 559 023a 00       		.byte	0
+ 560 023b 13       		.uleb128 0x13
+ 561 023c 7F000000 		.4byte	.LASF30
+ 562 0240 02       		.byte	0x2
+ 563 0241 0F       		.byte	0xf
+ 564 0242 5D000000 		.4byte	0x5d
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 13
+
+
+ 565 0246 00000000 		.4byte	.LFB34
+ 566 024a 70000000 		.4byte	.LFE34-.LFB34
+ 567 024e 01       		.uleb128 0x1
+ 568 024f 9C       		.byte	0x9c
+ 569 0250 CA020000 		.4byte	0x2ca
+ 570 0254 14       		.uleb128 0x14
+ 571 0255 6D6300   		.ascii	"mc\000"
+ 572 0258 02       		.byte	0x2
+ 573 0259 14       		.byte	0x14
+ 574 025a 9A000000 		.4byte	0x9a
+ 575 025e 02       		.uleb128 0x2
+ 576 025f 91       		.byte	0x91
+ 577 0260 64       		.sleb128 -28
+ 578 0261 15       		.uleb128 0x15
+ 579 0262 1C000000 		.4byte	.LVL16
+ 580 0266 CA020000 		.4byte	0x2ca
+ 581 026a 74020000 		.4byte	0x274
+ 582 026e 11       		.uleb128 0x11
+ 583 026f 01       		.uleb128 0x1
+ 584 0270 50       		.byte	0x50
+ 585 0271 01       		.uleb128 0x1
+ 586 0272 31       		.byte	0x31
+ 587 0273 00       		.byte	0
+ 588 0274 15       		.uleb128 0x15
+ 589 0275 32000000 		.4byte	.LVL17
+ 590 0279 F4000000 		.4byte	0xf4
+ 591 027d 89020000 		.4byte	0x289
+ 592 0281 11       		.uleb128 0x11
+ 593 0282 02       		.uleb128 0x2
+ 594 0283 7D       		.byte	0x7d
+ 595 0284 04       		.sleb128 4
+ 596 0285 02       		.uleb128 0x2
+ 597 0286 09       		.byte	0x9
+ 598 0287 FF       		.byte	0xff
+ 599 0288 00       		.byte	0
+ 600 0289 15       		.uleb128 0x15
+ 601 028a 3A000000 		.4byte	.LVL18
+ 602 028e D5020000 		.4byte	0x2d5
+ 603 0292 9D020000 		.4byte	0x29d
+ 604 0296 11       		.uleb128 0x11
+ 605 0297 01       		.uleb128 0x1
+ 606 0298 50       		.byte	0x50
+ 607 0299 02       		.uleb128 0x2
+ 608 029a 74       		.byte	0x74
+ 609 029b 00       		.sleb128 0
+ 610 029c 00       		.byte	0
+ 611 029d 15       		.uleb128 0x15
+ 612 029e 40000000 		.4byte	.LVL19
+ 613 02a2 CA020000 		.4byte	0x2ca
+ 614 02a6 B0020000 		.4byte	0x2b0
+ 615 02aa 11       		.uleb128 0x11
+ 616 02ab 01       		.uleb128 0x1
+ 617 02ac 50       		.byte	0x50
+ 618 02ad 01       		.uleb128 0x1
+ 619 02ae 30       		.byte	0x30
+ 620 02af 00       		.byte	0
+ 621 02b0 16       		.uleb128 0x16
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 14
+
+
+ 622 02b1 52000000 		.4byte	.LVL20
+ 623 02b5 D0010000 		.4byte	0x1d0
+ 624 02b9 17       		.uleb128 0x17
+ 625 02ba 58000000 		.4byte	.LVL21
+ 626 02be D5020000 		.4byte	0x2d5
+ 627 02c2 11       		.uleb128 0x11
+ 628 02c3 01       		.uleb128 0x1
+ 629 02c4 50       		.byte	0x50
+ 630 02c5 02       		.uleb128 0x2
+ 631 02c6 74       		.byte	0x74
+ 632 02c7 00       		.sleb128 0
+ 633 02c8 00       		.byte	0
+ 634 02c9 00       		.byte	0
+ 635 02ca 18       		.uleb128 0x18
+ 636 02cb 6A000000 		.4byte	.LASF23
+ 637 02cf 6A000000 		.4byte	.LASF23
+ 638 02d3 03       		.byte	0x3
+ 639 02d4 33       		.byte	0x33
+ 640 02d5 18       		.uleb128 0x18
+ 641 02d6 2A000000 		.4byte	.LASF24
+ 642 02da 2A000000 		.4byte	.LASF24
+ 643 02de 04       		.byte	0x4
+ 644 02df EC       		.byte	0xec
+ 645 02e0 00       		.byte	0
+ 646              		.section	.debug_abbrev,"",%progbits
+ 647              	.Ldebug_abbrev0:
+ 648 0000 01       		.uleb128 0x1
+ 649 0001 11       		.uleb128 0x11
+ 650 0002 01       		.byte	0x1
+ 651 0003 25       		.uleb128 0x25
+ 652 0004 0E       		.uleb128 0xe
+ 653 0005 13       		.uleb128 0x13
+ 654 0006 0B       		.uleb128 0xb
+ 655 0007 03       		.uleb128 0x3
+ 656 0008 0E       		.uleb128 0xe
+ 657 0009 1B       		.uleb128 0x1b
+ 658 000a 0E       		.uleb128 0xe
+ 659 000b 55       		.uleb128 0x55
+ 660 000c 17       		.uleb128 0x17
+ 661 000d 11       		.uleb128 0x11
+ 662 000e 01       		.uleb128 0x1
+ 663 000f 10       		.uleb128 0x10
+ 664 0010 17       		.uleb128 0x17
+ 665 0011 00       		.byte	0
+ 666 0012 00       		.byte	0
+ 667 0013 02       		.uleb128 0x2
+ 668 0014 24       		.uleb128 0x24
+ 669 0015 00       		.byte	0
+ 670 0016 0B       		.uleb128 0xb
+ 671 0017 0B       		.uleb128 0xb
+ 672 0018 3E       		.uleb128 0x3e
+ 673 0019 0B       		.uleb128 0xb
+ 674 001a 03       		.uleb128 0x3
+ 675 001b 0E       		.uleb128 0xe
+ 676 001c 00       		.byte	0
+ 677 001d 00       		.byte	0
+ 678 001e 03       		.uleb128 0x3
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 15
+
+
+ 679 001f 24       		.uleb128 0x24
+ 680 0020 00       		.byte	0
+ 681 0021 0B       		.uleb128 0xb
+ 682 0022 0B       		.uleb128 0xb
+ 683 0023 3E       		.uleb128 0x3e
+ 684 0024 0B       		.uleb128 0xb
+ 685 0025 03       		.uleb128 0x3
+ 686 0026 08       		.uleb128 0x8
+ 687 0027 00       		.byte	0
+ 688 0028 00       		.byte	0
+ 689 0029 04       		.uleb128 0x4
+ 690 002a 16       		.uleb128 0x16
+ 691 002b 00       		.byte	0
+ 692 002c 03       		.uleb128 0x3
+ 693 002d 0E       		.uleb128 0xe
+ 694 002e 3A       		.uleb128 0x3a
+ 695 002f 0B       		.uleb128 0xb
+ 696 0030 3B       		.uleb128 0x3b
+ 697 0031 05       		.uleb128 0x5
+ 698 0032 49       		.uleb128 0x49
+ 699 0033 13       		.uleb128 0x13
+ 700 0034 00       		.byte	0
+ 701 0035 00       		.byte	0
+ 702 0036 05       		.uleb128 0x5
+ 703 0037 13       		.uleb128 0x13
+ 704 0038 01       		.byte	0x1
+ 705 0039 03       		.uleb128 0x3
+ 706 003a 0E       		.uleb128 0xe
+ 707 003b 0B       		.uleb128 0xb
+ 708 003c 0B       		.uleb128 0xb
+ 709 003d 3A       		.uleb128 0x3a
+ 710 003e 0B       		.uleb128 0xb
+ 711 003f 3B       		.uleb128 0x3b
+ 712 0040 0B       		.uleb128 0xb
+ 713 0041 01       		.uleb128 0x1
+ 714 0042 13       		.uleb128 0x13
+ 715 0043 00       		.byte	0
+ 716 0044 00       		.byte	0
+ 717 0045 06       		.uleb128 0x6
+ 718 0046 0D       		.uleb128 0xd
+ 719 0047 00       		.byte	0
+ 720 0048 03       		.uleb128 0x3
+ 721 0049 0E       		.uleb128 0xe
+ 722 004a 3A       		.uleb128 0x3a
+ 723 004b 0B       		.uleb128 0xb
+ 724 004c 3B       		.uleb128 0x3b
+ 725 004d 0B       		.uleb128 0xb
+ 726 004e 49       		.uleb128 0x49
+ 727 004f 13       		.uleb128 0x13
+ 728 0050 38       		.uleb128 0x38
+ 729 0051 0B       		.uleb128 0xb
+ 730 0052 00       		.byte	0
+ 731 0053 00       		.byte	0
+ 732 0054 07       		.uleb128 0x7
+ 733 0055 15       		.uleb128 0x15
+ 734 0056 01       		.byte	0x1
+ 735 0057 27       		.uleb128 0x27
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 16
+
+
+ 736 0058 19       		.uleb128 0x19
+ 737 0059 01       		.uleb128 0x1
+ 738 005a 13       		.uleb128 0x13
+ 739 005b 00       		.byte	0
+ 740 005c 00       		.byte	0
+ 741 005d 08       		.uleb128 0x8
+ 742 005e 05       		.uleb128 0x5
+ 743 005f 00       		.byte	0
+ 744 0060 49       		.uleb128 0x49
+ 745 0061 13       		.uleb128 0x13
+ 746 0062 00       		.byte	0
+ 747 0063 00       		.byte	0
+ 748 0064 09       		.uleb128 0x9
+ 749 0065 0F       		.uleb128 0xf
+ 750 0066 00       		.byte	0
+ 751 0067 0B       		.uleb128 0xb
+ 752 0068 0B       		.uleb128 0xb
+ 753 0069 49       		.uleb128 0x49
+ 754 006a 13       		.uleb128 0x13
+ 755 006b 00       		.byte	0
+ 756 006c 00       		.byte	0
+ 757 006d 0A       		.uleb128 0xa
+ 758 006e 2E       		.uleb128 0x2e
+ 759 006f 01       		.byte	0x1
+ 760 0070 3F       		.uleb128 0x3f
+ 761 0071 19       		.uleb128 0x19
+ 762 0072 03       		.uleb128 0x3
+ 763 0073 0E       		.uleb128 0xe
+ 764 0074 3A       		.uleb128 0x3a
+ 765 0075 0B       		.uleb128 0xb
+ 766 0076 3B       		.uleb128 0x3b
+ 767 0077 0B       		.uleb128 0xb
+ 768 0078 27       		.uleb128 0x27
+ 769 0079 19       		.uleb128 0x19
+ 770 007a 11       		.uleb128 0x11
+ 771 007b 01       		.uleb128 0x1
+ 772 007c 12       		.uleb128 0x12
+ 773 007d 06       		.uleb128 0x6
+ 774 007e 40       		.uleb128 0x40
+ 775 007f 18       		.uleb128 0x18
+ 776 0080 9742     		.uleb128 0x2117
+ 777 0082 19       		.uleb128 0x19
+ 778 0083 01       		.uleb128 0x1
+ 779 0084 13       		.uleb128 0x13
+ 780 0085 00       		.byte	0
+ 781 0086 00       		.byte	0
+ 782 0087 0B       		.uleb128 0xb
+ 783 0088 05       		.uleb128 0x5
+ 784 0089 00       		.byte	0
+ 785 008a 03       		.uleb128 0x3
+ 786 008b 08       		.uleb128 0x8
+ 787 008c 3A       		.uleb128 0x3a
+ 788 008d 0B       		.uleb128 0xb
+ 789 008e 3B       		.uleb128 0x3b
+ 790 008f 0B       		.uleb128 0xb
+ 791 0090 49       		.uleb128 0x49
+ 792 0091 13       		.uleb128 0x13
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 17
+
+
+ 793 0092 02       		.uleb128 0x2
+ 794 0093 18       		.uleb128 0x18
+ 795 0094 00       		.byte	0
+ 796 0095 00       		.byte	0
+ 797 0096 0C       		.uleb128 0xc
+ 798 0097 05       		.uleb128 0x5
+ 799 0098 00       		.byte	0
+ 800 0099 03       		.uleb128 0x3
+ 801 009a 0E       		.uleb128 0xe
+ 802 009b 3A       		.uleb128 0x3a
+ 803 009c 0B       		.uleb128 0xb
+ 804 009d 3B       		.uleb128 0x3b
+ 805 009e 0B       		.uleb128 0xb
+ 806 009f 49       		.uleb128 0x49
+ 807 00a0 13       		.uleb128 0x13
+ 808 00a1 02       		.uleb128 0x2
+ 809 00a2 17       		.uleb128 0x17
+ 810 00a3 00       		.byte	0
+ 811 00a4 00       		.byte	0
+ 812 00a5 0D       		.uleb128 0xd
+ 813 00a6 34       		.uleb128 0x34
+ 814 00a7 00       		.byte	0
+ 815 00a8 03       		.uleb128 0x3
+ 816 00a9 0E       		.uleb128 0xe
+ 817 00aa 3A       		.uleb128 0x3a
+ 818 00ab 0B       		.uleb128 0xb
+ 819 00ac 3B       		.uleb128 0x3b
+ 820 00ad 0B       		.uleb128 0xb
+ 821 00ae 49       		.uleb128 0x49
+ 822 00af 13       		.uleb128 0x13
+ 823 00b0 1C       		.uleb128 0x1c
+ 824 00b1 0B       		.uleb128 0xb
+ 825 00b2 00       		.byte	0
+ 826 00b3 00       		.byte	0
+ 827 00b4 0E       		.uleb128 0xe
+ 828 00b5 0B       		.uleb128 0xb
+ 829 00b6 01       		.byte	0x1
+ 830 00b7 11       		.uleb128 0x11
+ 831 00b8 01       		.uleb128 0x1
+ 832 00b9 12       		.uleb128 0x12
+ 833 00ba 06       		.uleb128 0x6
+ 834 00bb 01       		.uleb128 0x1
+ 835 00bc 13       		.uleb128 0x13
+ 836 00bd 00       		.byte	0
+ 837 00be 00       		.byte	0
+ 838 00bf 0F       		.uleb128 0xf
+ 839 00c0 34       		.uleb128 0x34
+ 840 00c1 00       		.byte	0
+ 841 00c2 03       		.uleb128 0x3
+ 842 00c3 08       		.uleb128 0x8
+ 843 00c4 3A       		.uleb128 0x3a
+ 844 00c5 0B       		.uleb128 0xb
+ 845 00c6 3B       		.uleb128 0x3b
+ 846 00c7 0B       		.uleb128 0xb
+ 847 00c8 49       		.uleb128 0x49
+ 848 00c9 13       		.uleb128 0x13
+ 849 00ca 02       		.uleb128 0x2
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 18
+
+
+ 850 00cb 17       		.uleb128 0x17
+ 851 00cc 00       		.byte	0
+ 852 00cd 00       		.byte	0
+ 853 00ce 10       		.uleb128 0x10
+ 854 00cf 898201   		.uleb128 0x4109
+ 855 00d2 01       		.byte	0x1
+ 856 00d3 11       		.uleb128 0x11
+ 857 00d4 01       		.uleb128 0x1
+ 858 00d5 9342     		.uleb128 0x2113
+ 859 00d7 18       		.uleb128 0x18
+ 860 00d8 01       		.uleb128 0x1
+ 861 00d9 13       		.uleb128 0x13
+ 862 00da 00       		.byte	0
+ 863 00db 00       		.byte	0
+ 864 00dc 11       		.uleb128 0x11
+ 865 00dd 8A8201   		.uleb128 0x410a
+ 866 00e0 00       		.byte	0
+ 867 00e1 02       		.uleb128 0x2
+ 868 00e2 18       		.uleb128 0x18
+ 869 00e3 9142     		.uleb128 0x2111
+ 870 00e5 18       		.uleb128 0x18
+ 871 00e6 00       		.byte	0
+ 872 00e7 00       		.byte	0
+ 873 00e8 12       		.uleb128 0x12
+ 874 00e9 898201   		.uleb128 0x4109
+ 875 00ec 01       		.byte	0x1
+ 876 00ed 11       		.uleb128 0x11
+ 877 00ee 01       		.uleb128 0x1
+ 878 00ef 9342     		.uleb128 0x2113
+ 879 00f1 18       		.uleb128 0x18
+ 880 00f2 00       		.byte	0
+ 881 00f3 00       		.byte	0
+ 882 00f4 13       		.uleb128 0x13
+ 883 00f5 2E       		.uleb128 0x2e
+ 884 00f6 01       		.byte	0x1
+ 885 00f7 3F       		.uleb128 0x3f
+ 886 00f8 19       		.uleb128 0x19
+ 887 00f9 03       		.uleb128 0x3
+ 888 00fa 0E       		.uleb128 0xe
+ 889 00fb 3A       		.uleb128 0x3a
+ 890 00fc 0B       		.uleb128 0xb
+ 891 00fd 3B       		.uleb128 0x3b
+ 892 00fe 0B       		.uleb128 0xb
+ 893 00ff 27       		.uleb128 0x27
+ 894 0100 19       		.uleb128 0x19
+ 895 0101 49       		.uleb128 0x49
+ 896 0102 13       		.uleb128 0x13
+ 897 0103 8701     		.uleb128 0x87
+ 898 0105 19       		.uleb128 0x19
+ 899 0106 11       		.uleb128 0x11
+ 900 0107 01       		.uleb128 0x1
+ 901 0108 12       		.uleb128 0x12
+ 902 0109 06       		.uleb128 0x6
+ 903 010a 40       		.uleb128 0x40
+ 904 010b 18       		.uleb128 0x18
+ 905 010c 9742     		.uleb128 0x2117
+ 906 010e 19       		.uleb128 0x19
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 19
+
+
+ 907 010f 01       		.uleb128 0x1
+ 908 0110 13       		.uleb128 0x13
+ 909 0111 00       		.byte	0
+ 910 0112 00       		.byte	0
+ 911 0113 14       		.uleb128 0x14
+ 912 0114 34       		.uleb128 0x34
+ 913 0115 00       		.byte	0
+ 914 0116 03       		.uleb128 0x3
+ 915 0117 08       		.uleb128 0x8
+ 916 0118 3A       		.uleb128 0x3a
+ 917 0119 0B       		.uleb128 0xb
+ 918 011a 3B       		.uleb128 0x3b
+ 919 011b 0B       		.uleb128 0xb
+ 920 011c 49       		.uleb128 0x49
+ 921 011d 13       		.uleb128 0x13
+ 922 011e 02       		.uleb128 0x2
+ 923 011f 18       		.uleb128 0x18
+ 924 0120 00       		.byte	0
+ 925 0121 00       		.byte	0
+ 926 0122 15       		.uleb128 0x15
+ 927 0123 898201   		.uleb128 0x4109
+ 928 0126 01       		.byte	0x1
+ 929 0127 11       		.uleb128 0x11
+ 930 0128 01       		.uleb128 0x1
+ 931 0129 31       		.uleb128 0x31
+ 932 012a 13       		.uleb128 0x13
+ 933 012b 01       		.uleb128 0x1
+ 934 012c 13       		.uleb128 0x13
+ 935 012d 00       		.byte	0
+ 936 012e 00       		.byte	0
+ 937 012f 16       		.uleb128 0x16
+ 938 0130 898201   		.uleb128 0x4109
+ 939 0133 00       		.byte	0
+ 940 0134 11       		.uleb128 0x11
+ 941 0135 01       		.uleb128 0x1
+ 942 0136 31       		.uleb128 0x31
+ 943 0137 13       		.uleb128 0x13
+ 944 0138 00       		.byte	0
+ 945 0139 00       		.byte	0
+ 946 013a 17       		.uleb128 0x17
+ 947 013b 898201   		.uleb128 0x4109
+ 948 013e 01       		.byte	0x1
+ 949 013f 11       		.uleb128 0x11
+ 950 0140 01       		.uleb128 0x1
+ 951 0141 31       		.uleb128 0x31
+ 952 0142 13       		.uleb128 0x13
+ 953 0143 00       		.byte	0
+ 954 0144 00       		.byte	0
+ 955 0145 18       		.uleb128 0x18
+ 956 0146 2E       		.uleb128 0x2e
+ 957 0147 00       		.byte	0
+ 958 0148 3F       		.uleb128 0x3f
+ 959 0149 19       		.uleb128 0x19
+ 960 014a 3C       		.uleb128 0x3c
+ 961 014b 19       		.uleb128 0x19
+ 962 014c 6E       		.uleb128 0x6e
+ 963 014d 0E       		.uleb128 0xe
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 20
+
+
+ 964 014e 03       		.uleb128 0x3
+ 965 014f 0E       		.uleb128 0xe
+ 966 0150 3A       		.uleb128 0x3a
+ 967 0151 0B       		.uleb128 0xb
+ 968 0152 3B       		.uleb128 0x3b
+ 969 0153 0B       		.uleb128 0xb
+ 970 0154 00       		.byte	0
+ 971 0155 00       		.byte	0
+ 972 0156 00       		.byte	0
+ 973              		.section	.debug_loc,"",%progbits
+ 974              	.Ldebug_loc0:
+ 975              	.LLST0:
+ 976 0000 00000000 		.4byte	.LVL0
+ 977 0004 1C000000 		.4byte	.LVL3
+ 978 0008 0200     		.2byte	0x2
+ 979 000a 91       		.byte	0x91
+ 980 000b 04       		.sleb128 4
+ 981 000c 1C000000 		.4byte	.LVL3
+ 982 0010 22000000 		.4byte	.LVL4
+ 983 0014 0100     		.2byte	0x1
+ 984 0016 54       		.byte	0x54
+ 985 0017 24000000 		.4byte	.LVL5
+ 986 001b 28000000 		.4byte	.LVL6
+ 987 001f 0100     		.2byte	0x1
+ 988 0021 54       		.byte	0x54
+ 989 0022 28000000 		.4byte	.LVL6
+ 990 0026 2A000000 		.4byte	.LVL7
+ 991 002a 0200     		.2byte	0x2
+ 992 002c 30       		.byte	0x30
+ 993 002d 9F       		.byte	0x9f
+ 994 002e 00000000 		.4byte	0
+ 995 0032 00000000 		.4byte	0
+ 996              	.LLST1:
+ 997 0036 16000000 		.4byte	.LVL2
+ 998 003a 1C000000 		.4byte	.LVL3
+ 999 003e 0100     		.2byte	0x1
+ 1000 0040 54       		.byte	0x54
+ 1001 0041 1C000000 		.4byte	.LVL3
+ 1002 0045 22000000 		.4byte	.LVL4
+ 1003 0049 0200     		.2byte	0x2
+ 1004 004b 91       		.byte	0x91
+ 1005 004c 64       		.sleb128 -28
+ 1006 004d 22000000 		.4byte	.LVL4
+ 1007 0051 28000000 		.4byte	.LVL6
+ 1008 0055 0100     		.2byte	0x1
+ 1009 0057 54       		.byte	0x54
+ 1010 0058 28000000 		.4byte	.LVL6
+ 1011 005c 2A000000 		.4byte	.LVL7
+ 1012 0060 0200     		.2byte	0x2
+ 1013 0062 30       		.byte	0x30
+ 1014 0063 9F       		.byte	0x9f
+ 1015 0064 00000000 		.4byte	0
+ 1016 0068 00000000 		.4byte	0
+ 1017              	.LLST2:
+ 1018 006c 16000000 		.4byte	.LVL2
+ 1019 0070 2A000000 		.4byte	.LVL7
+ 1020 0074 0200     		.2byte	0x2
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 21
+
+
+ 1021 0076 30       		.byte	0x30
+ 1022 0077 9F       		.byte	0x9f
+ 1023 0078 00000000 		.4byte	0
+ 1024 007c 00000000 		.4byte	0
+ 1025              	.LLST3:
+ 1026 0080 1C000000 		.4byte	.LVL3
+ 1027 0084 22000000 		.4byte	.LVL4
+ 1028 0088 0100     		.2byte	0x1
+ 1029 008a 54       		.byte	0x54
+ 1030 008b 00000000 		.4byte	0
+ 1031 008f 00000000 		.4byte	0
+ 1032              	.LLST4:
+ 1033 0093 1C000000 		.4byte	.LVL3
+ 1034 0097 2A000000 		.4byte	.LVL7
+ 1035 009b 0300     		.2byte	0x3
+ 1036 009d 08       		.byte	0x8
+ 1037 009e FF       		.byte	0xff
+ 1038 009f 9F       		.byte	0x9f
+ 1039 00a0 00000000 		.4byte	0
+ 1040 00a4 00000000 		.4byte	0
+ 1041              		.section	.debug_aranges,"",%progbits
+ 1042 0000 2C000000 		.4byte	0x2c
+ 1043 0004 0200     		.2byte	0x2
+ 1044 0006 00000000 		.4byte	.Ldebug_info0
+ 1045 000a 04       		.byte	0x4
+ 1046 000b 00       		.byte	0
+ 1047 000c 0000     		.2byte	0
+ 1048 000e 0000     		.2byte	0
+ 1049 0010 00000000 		.4byte	.LFB32
+ 1050 0014 4A000000 		.4byte	.LFE32-.LFB32
+ 1051 0018 00000000 		.4byte	.LFB33
+ 1052 001c 2A000000 		.4byte	.LFE33-.LFB33
+ 1053 0020 00000000 		.4byte	.LFB34
+ 1054 0024 70000000 		.4byte	.LFE34-.LFB34
+ 1055 0028 00000000 		.4byte	0
+ 1056 002c 00000000 		.4byte	0
+ 1057              		.section	.debug_ranges,"",%progbits
+ 1058              	.Ldebug_ranges0:
+ 1059 0000 00000000 		.4byte	.LFB32
+ 1060 0004 4A000000 		.4byte	.LFE32
+ 1061 0008 00000000 		.4byte	.LFB33
+ 1062 000c 2A000000 		.4byte	.LFE33
+ 1063 0010 00000000 		.4byte	.LFB34
+ 1064 0014 70000000 		.4byte	.LFE34
+ 1065 0018 00000000 		.4byte	0
+ 1066 001c 00000000 		.4byte	0
+ 1067              		.section	.debug_line,"",%progbits
+ 1068              	.Ldebug_line0:
+ 1069 0000 CF000000 		.section	.debug_str,"MS",%progbits,1
+ 1069      02006600 
+ 1069      00000201 
+ 1069      FB0E0D00 
+ 1069      01010101 
+ 1070              	.LASF22:
+ 1071 0000 73746F70 		.ascii	"stopMoving\000"
+ 1071      4D6F7669 
+ 1071      6E6700
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 22
+
+
+ 1072              	.LASF15:
+ 1073 000b 5F70776D 		.ascii	"_pwmR_Write\000"
+ 1073      525F5772 
+ 1073      69746500 
+ 1074              	.LASF3:
+ 1075 0017 73686F72 		.ascii	"short unsigned int\000"
+ 1075      7420756E 
+ 1075      7369676E 
+ 1075      65642069 
+ 1075      6E7400
+ 1076              	.LASF24:
+ 1077 002a 43794465 		.ascii	"CyDelay\000"
+ 1077      6C617900 
+ 1078              	.LASF9:
+ 1079 0032 666C6F61 		.ascii	"float\000"
+ 1079      7400
+ 1080              	.LASF1:
+ 1081 0038 756E7369 		.ascii	"unsigned char\000"
+ 1081      676E6564 
+ 1081      20636861 
+ 1081      7200
+ 1082              	.LASF5:
+ 1083 0046 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1083      20756E73 
+ 1083      69676E65 
+ 1083      6420696E 
+ 1083      7400
+ 1084              	.LASF28:
+ 1085 0058 75696E74 		.ascii	"uint8\000"
+ 1085      3800
+ 1086              	.LASF17:
+ 1087 005e 5F646972 		.ascii	"_dirR_Write\000"
+ 1087      525F5772 
+ 1087      69746500 
+ 1088              	.LASF23:
+ 1089 006a 426C7565 		.ascii	"BlueLED_Write\000"
+ 1089      4C45445F 
+ 1089      57726974 
+ 1089      6500
+ 1090              	.LASF10:
+ 1091 0078 646F7562 		.ascii	"double\000"
+ 1091      6C6500
+ 1092              	.LASF30:
+ 1093 007f 6D61696E 		.ascii	"main\000"
+ 1093      00
+ 1094              	.LASF18:
+ 1095 0084 5F637572 		.ascii	"_currentSpeed\000"
+ 1095      72656E74 
+ 1095      53706565 
+ 1095      6400
+ 1096              	.LASF21:
+ 1097 0092 6D6F7665 		.ascii	"moveTog\000"
+ 1097      546F6700 
+ 1098              	.LASF8:
+ 1099 009a 756E7369 		.ascii	"unsigned int\000"
+ 1099      676E6564 
+ 1099      20696E74 
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 23
+
+
+ 1099      00
+ 1100              	.LASF14:
+ 1101 00a7 5F70776D 		.ascii	"_pwmL_Write\000"
+ 1101      4C5F5772 
+ 1101      69746500 
+ 1102              	.LASF27:
+ 1103 00b3 433A5C55 		.ascii	"C:\\Users\\sabri\\Documents\\PSoC Creator\\Test\\Mo"
+ 1103      73657273 
+ 1103      5C736162 
+ 1103      72695C44 
+ 1103      6F63756D 
+ 1104 00e0 746F7243 		.ascii	"torControl.cydsn\000"
+ 1104      6F6E7472 
+ 1104      6F6C2E63 
+ 1104      7964736E 
+ 1104      00
+ 1105              	.LASF7:
+ 1106 00f1 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1106      206C6F6E 
+ 1106      6720756E 
+ 1106      7369676E 
+ 1106      65642069 
+ 1107              	.LASF25:
+ 1108 0108 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1108      43313120 
+ 1108      352E342E 
+ 1108      31203230 
+ 1108      31363036 
+ 1109 013b 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1109      20726576 
+ 1109      6973696F 
+ 1109      6E203233 
+ 1109      37373135 
+ 1110 016e 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1110      66756E63 
+ 1110      74696F6E 
+ 1110      2D736563 
+ 1110      74696F6E 
+ 1111              	.LASF19:
+ 1112 0196 73706565 		.ascii	"speed\000"
+ 1112      6400
+ 1113              	.LASF12:
+ 1114 019c 73697A65 		.ascii	"sizetype\000"
+ 1114      74797065 
+ 1114      00
+ 1115              	.LASF6:
+ 1116 01a5 6C6F6E67 		.ascii	"long long int\000"
+ 1116      206C6F6E 
+ 1116      6720696E 
+ 1116      7400
+ 1117              	.LASF26:
+ 1118 01b3 6D61696E 		.ascii	"main.c\000"
+ 1118      2E6300
+ 1119              	.LASF11:
+ 1120 01ba 63686172 		.ascii	"char\000"
+ 1120      00
+ 1121              	.LASF2:
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 24
+
+
+ 1122 01bf 73686F72 		.ascii	"short int\000"
+ 1122      7420696E 
+ 1122      7400
+ 1123              	.LASF16:
+ 1124 01c9 5F646972 		.ascii	"_dirL_Write\000"
+ 1124      4C5F5772 
+ 1124      69746500 
+ 1125              	.LASF29:
+ 1126 01d5 4D6F746F 		.ascii	"MotorController\000"
+ 1126      72436F6E 
+ 1126      74726F6C 
+ 1126      6C657200 
+ 1127              	.LASF4:
+ 1128 01e5 6C6F6E67 		.ascii	"long int\000"
+ 1128      20696E74 
+ 1128      00
+ 1129              	.LASF13:
+ 1130 01ee 6C6F6E67 		.ascii	"long double\000"
+ 1130      20646F75 
+ 1130      626C6500 
+ 1131              	.LASF0:
+ 1132 01fa 7369676E 		.ascii	"signed char\000"
+ 1132      65642063 
+ 1132      68617200 
+ 1133              	.LASF20:
+ 1134 0206 6E657444 		.ascii	"netDir\000"
+ 1134      697200
+ 1135              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

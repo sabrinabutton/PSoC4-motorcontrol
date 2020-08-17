@@ -1,0 +1,60 @@
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/CortexM0/ARM_GCC_541/Debug/main.o : C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/BlueLED.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/BlueLED_aliases.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyFlash.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyLFClk.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyLib.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_armcc.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_compiler.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_gcc.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/core_cm0.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/core_cm0_psoc4.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyPm.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cy_em_eeprom.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cydevice_trm.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cydisabledsheets.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyfitter.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyfitter_cfg.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cypins.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cytypes.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirA.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirA_aliases.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirB.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirB_aliases.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/project.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmA.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmA_aliases.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmB.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmB_aliases.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/control.h C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/main.c 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/BlueLED.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/BlueLED_aliases.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyFlash.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyLFClk.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/CyLib.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_armcc.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_compiler.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cmsis_gcc.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/core_cm0.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/core_cm0_psoc4.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyPm.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cy_em_eeprom.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cydevice_trm.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cydisabledsheets.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyfitter.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cyfitter_cfg.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cypins.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/cytypes.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirA.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirA_aliases.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirB.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/dirB_aliases.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/project.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmA.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmA_aliases.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmB.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/Generated_Source/PSoC4/pwmB_aliases.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/control.h : 
+
+C:/Users/sabri/Documents/PSoC\ Creator/Test/MotorControl.cydsn/main.c : 
+

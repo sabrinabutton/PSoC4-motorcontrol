@@ -1,0 +1,6 @@
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|fb478f5c-8b56-4429-9806-a404dc8bb62d
+C:\Users\sabri\Documents\PSoC Creator\4.3\Downloads ( 4.3).cylib\Downloads ( 4.3).cyprj|74214965-59b3-438a-a30c-51e8f9865a5b
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|216114ec-7978-461c-9124-03b0a03cfc95
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|34214c95-cc70-47b1-94f1-47b89b4cd2b9
+C:\Program Files (x86)\Cypress\PSoC Creator\4.3\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|775b12b1-c496-40b2-945f-9d883ab72d94
+C:\Users\sabri\Documents\PSoC Creator\Test\MotorControl.cydsn\MotorControl.cyprj|d505cffb-97b1-416d-bbed-2b78728efa31

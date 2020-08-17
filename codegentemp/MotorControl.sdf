@@ -1,0 +1,23 @@
+(DELAYFILE
+ (SDFVERSION "IEEE 1497 4.0")
+ (DATE "2020-08-17T00:07:29Z")
+ (DESIGN "MotorControl")
+ (VENDOR "Cypress Semiconductor")
+ (PROGRAM "PSoC Creator")
+ (VERSION " 4.3")
+ (DIVIDER .)
+ (TIMESCALE 1 ns)
+ (CELL
+  (CELLTYPE "MotorControl")
+  (INSTANCE *)
+  (DELAY
+   (ABSOLUTE
+    (INTERCONNECT dirA\(0\)_PAD dirA\(0\).pad_in (0.000:0.000:0.000))
+    (INTERCONNECT pwmA\(0\)_PAD pwmA\(0\).pad_in (0.000:0.000:0.000))
+    (INTERCONNECT dirB\(0\)_PAD dirB\(0\).pad_in (0.000:0.000:0.000))
+    (INTERCONNECT pwmB\(0\)_PAD pwmB\(0\).pad_in (0.000:0.000:0.000))
+    (INTERCONNECT BlueLED\(0\)_PAD BlueLED\(0\).pad_in (0.000:0.000:0.000))
+   )
+  )
+ )
+)
