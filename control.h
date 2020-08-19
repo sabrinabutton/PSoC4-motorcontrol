@@ -38,37 +38,43 @@ struct MotorController
     int _currentSpeed;
 };
 
-void moveTog(struct MotorController mc, uint8 speed){
-    //since both wheels are moving in unison, have net direction which both mc.dirX variables will be set to
-    uint8 netDir = 0;
-    
-    if(speed != mc._currentSpeed){
+void adjMove(struct MotorController mc, uint8* speed, uint8* dir){
+    if(*speed != mc._currentSpeed){
         //if speed changes, update motor speed
-        mc._currentSpeed = speed;
+        mc._currentSpeed = *speed;
         
         if(speed < 0){
-            netDir = 1;
-            speed = min(speed, 0);
-            speed = max(speed, -255);
+            *dir = 1;
+            *speed = min(*speed, 0);
+            *speed = max(*speed, -255);
             
-            if(speed > -6) {speed = 0; netDir = 0;}
-		    else {speed = 255 + speed;}
+            if(*speed > -6) {*speed = 0; dir = 0;}
+		    else {*speed = 255 + *speed;}
         }
         
         else{ // fastest speed is 255 which is 255
-		    netDir = 0;
-            speed = max(speed, 0); //70
-            speed = min(speed, 255);
+		    *dir = 0;
+            *speed = max(*speed, 0); //70
+            *speed = min(*speed, 255);
 			//speed = map(speed,0,255,_minPosSpeed,255);
-			if(speed < 6) {speed = 0; netDir = 0;}
+			if(*speed < 6) {*speed = 0; *dir = 0;}
         }
     }
+ 
+}
+
+void move(struct MotorController mc, uint8 speedA, uint8 speedB){
+    uint8 dirA, dirB;
+    
+    //adjust movements for left and right wheel
+    adjMove(mc, &speedA, &dirA);
+    adjMove(mc, &speedB, &dirB);
     
     //write to the pins via pointer functions on passed mc
-    (*mc._dirL_Write)(netDir);
-    (*mc._dirR_Write)(netDir);
-    (*mc._pwmL_Write)(speed);
-    (*mc._pwmR_Write)(speed);
+    (*mc._dirL_Write)(dirA);
+    (*mc._dirR_Write)(dirB);
+    (*mc._pwmL_Write)(speedA);
+    (*mc._pwmR_Write)(speedB);
 }
 
 void stopMoving(struct MotorController mc){

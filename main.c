@@ -12,6 +12,18 @@
 #include "project.h"
 #include "control.h"
 
+#define STOP 0
+#define WAIT_STOP 1
+#define FORWARD 2
+#define MOVE_FORWARD 3
+#define LEFT 4
+#define TURN_LEFT 5
+#define RIGHT 6
+#define TURN_RIGHT 7
+
+uint8 state;
+int move_cnt;
+
 int main(void)
 {
     CyGlobalIntEnable; /* Enable global interrupts. */
@@ -28,13 +40,66 @@ int main(void)
     for(;;)
     {
         /* Place your application code here. */
-        BlueLED_Write(1);
-        moveTog(mc, 255);
-        CyDelay(5000);
+    CyDelay(50);
+    switch (state)
+       {
+        case STOP:  //Statements to execute
+          move_cnt = 100;
+          move(mc, 0,0);
+          state = WAIT_STOP;
+
+          break;
+        case WAIT_STOP:
+          move_cnt--;
+          if(move_cnt == 0) {
+             state = FORWARD;
+          }
+          break;
+        case FORWARD:   //Statements to execute
+          move_cnt = 100;
+          move(mc, 255,255);
+          state = MOVE_FORWARD;
+
+          break;
+        case MOVE_FORWARD:   //Statements to execute
+          move_cnt--;
+          // if == zero - then go forward
+          if(move_cnt == 0) {
+             state = LEFT;
+          }
+          break;
+        case LEFT:
+          move_cnt = 100;
+          move(mc, 255,0);
+          state = TURN_LEFT;
+
+          break;
+        case TURN_LEFT:
+          // decrement turn counter
+          move_cnt--;
+          // if == zero - then go forward
+          if(move_cnt == 0) {
+             state = RIGHT;
+          } 
+         break;
+        case RIGHT:
+          move_cnt = 100;
+          move(mc, 0,255);
+          state = TURN_RIGHT;
+
+          break;
+        case TURN_RIGHT:
+          // decrement turn counter
+          move_cnt--;
+          // if == zero - then go forward
+          if(move_cnt == 0) {
+             state = FORWARD;
+          } 
+         break;
+       default:
+         break;
+      }
         
-        BlueLED_Write(0);
-        stopMoving(mc);
-        CyDelay(5000);
     }
 }
 

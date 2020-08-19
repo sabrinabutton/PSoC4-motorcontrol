@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 1
 
 
    1              		.syntax unified
@@ -19,13 +19,13 @@ ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
   16              		.text
   17              	.Ltext0:
   18              		.cfi_sections	.debug_frame
-  19              		.section	.text.moveTog,"ax",%progbits
+  19              		.section	.text.adjMove,"ax",%progbits
   20              		.align	2
-  21              		.global	moveTog
+  21              		.global	adjMove
   22              		.code	16
   23              		.thumb_func
-  24              		.type	moveTog, %function
-  25              	moveTog:
+  24              		.type	adjMove, %function
+  25              	adjMove:
   26              	.LFB32:
   27              		.file 1 "control.h"
    1:control.h     **** /* ========================================
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
   28:control.h     **** {
   29:control.h     ****     
   30:control.h     ****     //pulse width modulation (pwm) and direction (dir) inputs for left (L) and right (R) motors
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 2
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 2
 
 
   31:control.h     ****     void(*_pwmL_Write)(uint8); 
@@ -71,194 +71,262 @@ ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
   38:control.h     ****     int _currentSpeed;
   39:control.h     **** };
   40:control.h     **** 
-  41:control.h     **** void moveTog(struct MotorController mc, uint8 speed){
+  41:control.h     **** void adjMove(struct MotorController mc, uint8* speed, uint8* dir){
   28              		.loc 1 41 0
   29              		.cfi_startproc
-  30              		@ args = 24, pretend = 16, frame = 0
+  30              		@ args = 28, pretend = 16, frame = 0
   31              		@ frame_needed = 0, uses_anonymous_args = 0
-  32              	.LVL0:
-  33 0000 84B0     		sub	sp, sp, #16
-  34              		.cfi_def_cfa_offset 16
-  35 0002 10B5     		push	{r4, lr}
-  36              		.cfi_def_cfa_offset 24
-  37              		.cfi_offset 4, -24
-  38              		.cfi_offset 14, -20
-  39 0004 0290     		str	r0, [sp, #8]
-  40 0006 0391     		str	r1, [sp, #12]
-  41 0008 0492     		str	r2, [sp, #16]
-  42 000a 0593     		str	r3, [sp, #20]
-  43 000c 07AB     		add	r3, sp, #28
-  44 000e 1C78     		ldrb	r4, [r3]
-  45              	.LVL1:
-  42:control.h     ****     //since both wheels are moving in unison, have net direction which both mc.dirX variables will 
-  43:control.h     ****     uint8 netDir = 0;
-  44:control.h     ****     
-  45:control.h     ****     if(speed != mc._currentSpeed){
-  46              		.loc 1 45 0
-  47 0010 069B     		ldr	r3, [sp, #24]
-  48 0012 9C42     		cmp	r4, r3
-  49 0014 09D0     		beq	.L2
-  50              	.LVL2:
-  51              	.LBB2:
-  46:control.h     ****         //if speed changes, update motor speed
-  47:control.h     ****         mc._currentSpeed = speed;
-  48:control.h     ****         
-  49:control.h     ****         if(speed < 0){
-  50:control.h     ****             netDir = 1;
-  51:control.h     ****             speed = min(speed, 0);
-  52:control.h     ****             speed = max(speed, -255);
-  53:control.h     ****             
-  54:control.h     ****             if(speed > -6) {speed = 0; netDir = 0;}
-  55:control.h     **** 		    else {speed = 255 + speed;}
-  56:control.h     ****         }
-  57:control.h     ****         
-  58:control.h     ****         else{ // fastest speed is 255 which is 255
-  59:control.h     **** 		    netDir = 0;
-  60:control.h     ****             speed = max(speed, 0); //70
-  52              		.loc 1 60 0
-  53 0016 002C     		cmp	r4, #0
-  54 0018 00DA     		bge	.L3
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 3
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  34 0000 84B0     		sub	sp, sp, #16
+  35              		.cfi_def_cfa_offset 16
+  36 0002 0090     		str	r0, [sp]
+  37 0004 0191     		str	r1, [sp, #4]
+  38 0006 0292     		str	r2, [sp, #8]
+  39 0008 0393     		str	r3, [sp, #12]
+  40 000a 059B     		ldr	r3, [sp, #20]
+  42:control.h     ****     if(*speed != mc._currentSpeed){
+  41              		.loc 1 42 0
+  42 000c 1A78     		ldrb	r2, [r3]
+  43 000e 0499     		ldr	r1, [sp, #16]
+  44 0010 8A42     		cmp	r2, r1
+  45 0012 09D0     		beq	.L1
+  43:control.h     ****         //if speed changes, update motor speed
+  44:control.h     ****         mc._currentSpeed = *speed;
+  45:control.h     ****         
+  46:control.h     ****         if(speed < 0){
+  47:control.h     ****             *dir = 1;
+  48:control.h     ****             *speed = min(*speed, 0);
+  49:control.h     ****             *speed = max(*speed, -255);
+  50:control.h     ****             
+  51:control.h     ****             if(*speed > -6) {*speed = 0; dir = 0;}
+  52:control.h     **** 		    else {*speed = 255 + *speed;}
+  53:control.h     ****         }
+  54:control.h     ****         
+  55:control.h     ****         else{ // fastest speed is 255 which is 255
+  56:control.h     **** 		    *dir = 0;
+  46              		.loc 1 56 0
+  47 0014 0022     		movs	r2, #0
+  48 0016 0699     		ldr	r1, [sp, #24]
+  49 0018 0A70     		strb	r2, [r1]
+  50              	.LVL1:
+  57:control.h     ****             *speed = max(*speed, 0); //70
+  58:control.h     ****             *speed = min(*speed, 255);
+  51              		.loc 1 58 0
+  52 001a 1A78     		ldrb	r2, [r3]
+  53              	.LVL2:
+  54 001c 1A70     		strb	r2, [r3]
+  55              	.LVL3:
+  59:control.h     **** 			//speed = map(speed,0,255,_minPosSpeed,255);
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 3
 
 
-  55 001a 0024     		movs	r4, #0
-  56              	.LVL3:
-  57              	.L3:
-  58              	.LBE2:
-  59              	.LBB3:
-  61:control.h     ****             speed = min(speed, 255);
-  60              		.loc 1 61 0
-  61 001c FF2C     		cmp	r4, #255
-  62 001e 00DD     		ble	.L4
-  63 0020 FF24     		movs	r4, #255
-  64              	.LVL4:
-  65              	.L4:
-  66              	.LBE3:
-  67 0022 E4B2     		uxtb	r4, r4
-  68              	.LVL5:
-  62:control.h     **** 			//speed = map(speed,0,255,_minPosSpeed,255);
-  63:control.h     **** 			if(speed < 6) {speed = 0; netDir = 0;}
-  69              		.loc 1 63 0
-  70 0024 052C     		cmp	r4, #5
-  71 0026 00D8     		bhi	.L2
-  72              	.LVL6:
-  73 0028 0024     		movs	r4, #0
-  74              	.LVL7:
-  75              	.L2:
-  64:control.h     ****         }
-  65:control.h     ****     }
-  66:control.h     ****     
-  67:control.h     ****     //write to the pins via pointer functions on passed mc
-  68:control.h     ****     (*mc._dirL_Write)(netDir);
-  76              		.loc 1 68 0
-  77 002a 0020     		movs	r0, #0
-  78 002c 049B     		ldr	r3, [sp, #16]
-  79 002e 9847     		blx	r3
-  80              	.LVL8:
-  69:control.h     ****     (*mc._dirR_Write)(netDir);
-  81              		.loc 1 69 0
-  82 0030 0020     		movs	r0, #0
-  83 0032 059B     		ldr	r3, [sp, #20]
-  84 0034 9847     		blx	r3
-  85              	.LVL9:
-  70:control.h     ****     (*mc._pwmL_Write)(speed);
-  86              		.loc 1 70 0
-  87 0036 2000     		movs	r0, r4
-  88 0038 029B     		ldr	r3, [sp, #8]
-  89 003a 9847     		blx	r3
-  90              	.LVL10:
-  71:control.h     ****     (*mc._pwmR_Write)(speed);
-  91              		.loc 1 71 0
-  92 003c 2000     		movs	r0, r4
-  93 003e 039B     		ldr	r3, [sp, #12]
-  94 0040 9847     		blx	r3
-  95              	.LVL11:
-  72:control.h     **** }
-  96              		.loc 1 72 0
-  97              		@ sp needed
-  98 0042 10BC     		pop	{r4}
-  99 0044 08BC     		pop	{r3}
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 4
+  60:control.h     **** 			if(*speed < 6) {*speed = 0; *dir = 0;}
+  56              		.loc 1 60 0
+  57 001e 052A     		cmp	r2, #5
+  58 0020 02D8     		bhi	.L1
+  59              		.loc 1 60 0 is_stmt 0 discriminator 1
+  60 0022 0022     		movs	r2, #0
+  61              	.LVL4:
+  62 0024 1A70     		strb	r2, [r3]
+  63 0026 0A70     		strb	r2, [r1]
+  64              	.LVL5:
+  65              	.L1:
+  61:control.h     ****         }
+  62:control.h     ****     }
+  63:control.h     ****  
+  64:control.h     **** }
+  66              		.loc 1 64 0 is_stmt 1
+  67              		@ sp needed
+  68 0028 04B0     		add	sp, sp, #16
+  69 002a 7047     		bx	lr
+  70              		.cfi_endproc
+  71              	.LFE32:
+  72              		.size	adjMove, .-adjMove
+  73              		.section	.text.move,"ax",%progbits
+  74              		.align	2
+  75              		.global	move
+  76              		.code	16
+  77              		.thumb_func
+  78              		.type	move, %function
+  79              	move:
+  80              	.LFB33:
+  65:control.h     **** 
+  66:control.h     **** void move(struct MotorController mc, uint8 speedA, uint8 speedB){
+  81              		.loc 1 66 0
+  82              		.cfi_startproc
+  83              		@ args = 28, pretend = 16, frame = 16
+  84              		@ frame_needed = 0, uses_anonymous_args = 0
+  85              	.LVL6:
+  86 0000 84B0     		sub	sp, sp, #16
+  87              		.cfi_def_cfa_offset 16
+  88 0002 F0B5     		push	{r4, r5, r6, r7, lr}
+  89              		.cfi_def_cfa_offset 36
+  90              		.cfi_offset 4, -36
+  91              		.cfi_offset 5, -32
+  92              		.cfi_offset 6, -28
+  93              		.cfi_offset 7, -24
+  94              		.cfi_offset 14, -20
+  95 0004 89B0     		sub	sp, sp, #36
+  96              		.cfi_def_cfa_offset 72
+  97 0006 0E90     		str	r0, [sp, #56]
+  98 0008 0E00     		movs	r6, r1
+  99 000a 0F91     		str	r1, [sp, #60]
+ 100 000c 0492     		str	r2, [sp, #16]
+ 101 000e 1092     		str	r2, [sp, #64]
+ 102 0010 0593     		str	r3, [sp, #20]
+ 103 0012 1193     		str	r3, [sp, #68]
+  67:control.h     ****     uint8 dirA, dirB;
+  68:control.h     ****     
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 4
 
 
- 100 0046 04B0     		add	sp, sp, #16
- 101 0048 1847     		bx	r3
- 102              		.cfi_endproc
- 103              	.LFE32:
- 104              		.size	moveTog, .-moveTog
- 105 004a C046     		.section	.text.stopMoving,"ax",%progbits
- 106              		.align	2
- 107              		.global	stopMoving
- 108              		.code	16
- 109              		.thumb_func
- 110              		.type	stopMoving, %function
- 111              	stopMoving:
- 112              	.LFB33:
-  73:control.h     **** 
-  74:control.h     **** void stopMoving(struct MotorController mc){
- 113              		.loc 1 74 0
- 114              		.cfi_startproc
- 115              		@ args = 20, pretend = 16, frame = 0
- 116              		@ frame_needed = 0, uses_anonymous_args = 0
- 117 0000 84B0     		sub	sp, sp, #16
- 118              		.cfi_def_cfa_offset 16
- 119 0002 10B5     		push	{r4, lr}
- 120              		.cfi_def_cfa_offset 24
- 121              		.cfi_offset 4, -24
- 122              		.cfi_offset 14, -20
- 123 0004 0290     		str	r0, [sp, #8]
- 124 0006 0391     		str	r1, [sp, #12]
- 125 0008 0492     		str	r2, [sp, #16]
- 126 000a 0593     		str	r3, [sp, #20]
-  75:control.h     ****     //write to the pins via pointers
-  76:control.h     ****    (*mc._dirL_Write)(1);
- 127              		.loc 1 76 0
- 128 000c 0120     		movs	r0, #1
- 129 000e 9047     		blx	r2
- 130              	.LVL12:
-  77:control.h     ****    (*mc._dirR_Write)(1);
- 131              		.loc 1 77 0
- 132 0010 0120     		movs	r0, #1
- 133 0012 059B     		ldr	r3, [sp, #20]
- 134 0014 9847     		blx	r3
- 135              	.LVL13:
-  78:control.h     ****    (*mc._pwmL_Write)(1);
- 136              		.loc 1 78 0
- 137 0016 0120     		movs	r0, #1
- 138 0018 029B     		ldr	r3, [sp, #8]
- 139 001a 9847     		blx	r3
- 140              	.LVL14:
-  79:control.h     ****    (*mc._pwmR_Write)(1);
- 141              		.loc 1 79 0
- 142 001c 0120     		movs	r0, #1
- 143 001e 039B     		ldr	r3, [sp, #12]
- 144 0020 9847     		blx	r3
- 145              	.LVL15:
-  80:control.h     ****     
-  81:control.h     ****     //reset speed to 0
-  82:control.h     ****     mc._currentSpeed = 0;
-  83:control.h     **** }
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 5
+  69:control.h     ****     //adjust movements for left and right wheel
+  70:control.h     ****     adjMove(mc, &speedA, &dirA);
+ 104              		.loc 1 70 0
+ 105 0014 1725     		movs	r5, #23
+ 106 0016 02AB     		add	r3, sp, #8
+ 107 0018 9C46     		mov	ip, r3
+ 108 001a 6544     		add	r5, r5, ip
+ 109 001c 0295     		str	r5, [sp, #8]
+ 110 001e 13AC     		add	r4, sp, #76
+ 111 0020 0194     		str	r4, [sp, #4]
+ 112 0022 1299     		ldr	r1, [sp, #72]
+ 113 0024 0091     		str	r1, [sp]
+ 114 0026 3100     		movs	r1, r6
+ 115 0028 059B     		ldr	r3, [sp, #20]
+ 116 002a FFF7FEFF 		bl	adjMove
+ 117              	.LVL7:
+  71:control.h     ****     adjMove(mc, &speedB, &dirB);
+ 118              		.loc 1 71 0
+ 119 002e 1627     		movs	r7, #22
+ 120 0030 02AB     		add	r3, sp, #8
+ 121 0032 9C46     		mov	ip, r3
+ 122 0034 6744     		add	r7, r7, ip
+ 123 0036 0297     		str	r7, [sp, #8]
+ 124 0038 14AE     		add	r6, sp, #80
+ 125 003a 0196     		str	r6, [sp, #4]
+ 126 003c 129B     		ldr	r3, [sp, #72]
+ 127 003e 0093     		str	r3, [sp]
+ 128 0040 0E98     		ldr	r0, [sp, #56]
+ 129 0042 0F99     		ldr	r1, [sp, #60]
+ 130 0044 109A     		ldr	r2, [sp, #64]
+ 131 0046 119B     		ldr	r3, [sp, #68]
+ 132 0048 FFF7FEFF 		bl	adjMove
+ 133              	.LVL8:
+  72:control.h     ****     
+  73:control.h     ****     //write to the pins via pointer functions on passed mc
+  74:control.h     ****     (*mc._dirL_Write)(dirA);
+ 134              		.loc 1 74 0
+ 135 004c 2878     		ldrb	r0, [r5]
+ 136 004e 109B     		ldr	r3, [sp, #64]
+ 137 0050 9847     		blx	r3
+ 138              	.LVL9:
+  75:control.h     ****     (*mc._dirR_Write)(dirB);
+ 139              		.loc 1 75 0
+ 140 0052 3878     		ldrb	r0, [r7]
+ 141 0054 119B     		ldr	r3, [sp, #68]
+ 142 0056 9847     		blx	r3
+ 143              	.LVL10:
+  76:control.h     ****     (*mc._pwmL_Write)(speedA);
+ 144              		.loc 1 76 0
+ 145 0058 2078     		ldrb	r0, [r4]
+ 146 005a 0E9B     		ldr	r3, [sp, #56]
+ 147 005c 9847     		blx	r3
+ 148              	.LVL11:
+  77:control.h     ****     (*mc._pwmR_Write)(speedB);
+ 149              		.loc 1 77 0
+ 150 005e 3078     		ldrb	r0, [r6]
+ 151 0060 0F9B     		ldr	r3, [sp, #60]
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 5
 
 
- 146              		.loc 1 83 0
- 147              		@ sp needed
- 148 0022 10BC     		pop	{r4}
- 149 0024 08BC     		pop	{r3}
- 150 0026 04B0     		add	sp, sp, #16
- 151 0028 1847     		bx	r3
- 152              		.cfi_endproc
- 153              	.LFE33:
- 154              		.size	stopMoving, .-stopMoving
- 155 002a C046     		.section	.text.main,"ax",%progbits
- 156              		.align	2
- 157              		.global	main
- 158              		.code	16
- 159              		.thumb_func
- 160              		.type	main, %function
- 161              	main:
- 162              	.LFB34:
- 163              		.file 2 "main.c"
+ 152 0062 9847     		blx	r3
+ 153              	.LVL12:
+  78:control.h     **** }
+ 154              		.loc 1 78 0
+ 155 0064 09B0     		add	sp, sp, #36
+ 156              		@ sp needed
+ 157 0066 F0BC     		pop	{r4, r5, r6, r7}
+ 158 0068 08BC     		pop	{r3}
+ 159 006a 04B0     		add	sp, sp, #16
+ 160 006c 1847     		bx	r3
+ 161              		.cfi_endproc
+ 162              	.LFE33:
+ 163              		.size	move, .-move
+ 164 006e C046     		.section	.text.stopMoving,"ax",%progbits
+ 165              		.align	2
+ 166              		.global	stopMoving
+ 167              		.code	16
+ 168              		.thumb_func
+ 169              		.type	stopMoving, %function
+ 170              	stopMoving:
+ 171              	.LFB34:
+  79:control.h     **** 
+  80:control.h     **** void stopMoving(struct MotorController mc){
+ 172              		.loc 1 80 0
+ 173              		.cfi_startproc
+ 174              		@ args = 20, pretend = 16, frame = 0
+ 175              		@ frame_needed = 0, uses_anonymous_args = 0
+ 176 0000 84B0     		sub	sp, sp, #16
+ 177              		.cfi_def_cfa_offset 16
+ 178 0002 10B5     		push	{r4, lr}
+ 179              		.cfi_def_cfa_offset 24
+ 180              		.cfi_offset 4, -24
+ 181              		.cfi_offset 14, -20
+ 182 0004 0290     		str	r0, [sp, #8]
+ 183 0006 0391     		str	r1, [sp, #12]
+ 184 0008 0492     		str	r2, [sp, #16]
+ 185 000a 0593     		str	r3, [sp, #20]
+  81:control.h     ****     //write to the pins via pointers
+  82:control.h     ****    (*mc._dirL_Write)(1);
+ 186              		.loc 1 82 0
+ 187 000c 0120     		movs	r0, #1
+ 188 000e 9047     		blx	r2
+ 189              	.LVL13:
+  83:control.h     ****    (*mc._dirR_Write)(1);
+ 190              		.loc 1 83 0
+ 191 0010 0120     		movs	r0, #1
+ 192 0012 059B     		ldr	r3, [sp, #20]
+ 193 0014 9847     		blx	r3
+ 194              	.LVL14:
+  84:control.h     ****    (*mc._pwmL_Write)(1);
+ 195              		.loc 1 84 0
+ 196 0016 0120     		movs	r0, #1
+ 197 0018 029B     		ldr	r3, [sp, #8]
+ 198 001a 9847     		blx	r3
+ 199              	.LVL15:
+  85:control.h     ****    (*mc._pwmR_Write)(1);
+ 200              		.loc 1 85 0
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 6
+
+
+ 201 001c 0120     		movs	r0, #1
+ 202 001e 039B     		ldr	r3, [sp, #12]
+ 203 0020 9847     		blx	r3
+ 204              	.LVL16:
+  86:control.h     ****     
+  87:control.h     ****     //reset speed to 0
+  88:control.h     ****     mc._currentSpeed = 0;
+  89:control.h     **** }
+ 205              		.loc 1 89 0
+ 206              		@ sp needed
+ 207 0022 10BC     		pop	{r4}
+ 208 0024 08BC     		pop	{r3}
+ 209 0026 04B0     		add	sp, sp, #16
+ 210 0028 1847     		bx	r3
+ 211              		.cfi_endproc
+ 212              	.LFE34:
+ 213              		.size	stopMoving, .-stopMoving
+ 214 002a C046     		.section	.text.main,"ax",%progbits
+ 215              		.align	2
+ 216              		.global	main
+ 217              		.code	16
+ 218              		.thumb_func
+ 219              		.type	main, %function
+ 220              	main:
+ 221              	.LFB35:
+ 222              		.file 2 "main.c"
    1:main.c        **** /* ========================================
    2:main.c        ****  *
    3:main.c        ****  * Copyright SABRINA BUTTON, 2020
@@ -273,1139 +341,1361 @@ ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 1
   12:main.c        **** #include "project.h"
   13:main.c        **** #include "control.h"
   14:main.c        **** 
-  15:main.c        **** int main(void)
-  16:main.c        **** {
- 164              		.loc 2 16 0
- 165              		.cfi_startproc
- 166              		@ args = 0, pretend = 0, frame = 32
- 167              		@ frame_needed = 0, uses_anonymous_args = 0
- 168 0000 10B5     		push	{r4, lr}
- 169              		.cfi_def_cfa_offset 8
- 170              		.cfi_offset 4, -8
- 171              		.cfi_offset 14, -4
- 172 0002 8AB0     		sub	sp, sp, #40
- 173              		.cfi_def_cfa_offset 48
-  17:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
- 174              		.loc 2 17 0
- 175              		.syntax divided
- 176              	@ 17 "main.c" 1
- 177 0004 62B6     		CPSIE   i
- 178              	@ 0 "" 2
-  18:main.c        **** 
-  19:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
-  20:main.c        ****    struct  MotorController mc;
-  21:main.c        ****     
-  22:main.c        ****    mc._pwmL_Write = &pwmA_Write;
- 179              		.loc 2 22 0
- 180              		.thumb
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 6
+  15:main.c        **** #define STOP 0
+  16:main.c        **** #define WAIT_STOP 1
+  17:main.c        **** #define FORWARD 2
+  18:main.c        **** #define MOVE_FORWARD 3
+  19:main.c        **** #define LEFT 4
+  20:main.c        **** #define TURN_LEFT 5
+  21:main.c        **** #define RIGHT 6
+  22:main.c        **** #define TURN_RIGHT 7
+  23:main.c        **** 
+  24:main.c        **** uint8 state;
+  25:main.c        **** int move_cnt;
+  26:main.c        **** 
+  27:main.c        **** int main(void)
+  28:main.c        **** {
+ 223              		.loc 2 28 0
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 32
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 7
 
 
- 181              		.syntax unified
- 182 0006 154B     		ldr	r3, .L9
- 183 0008 0593     		str	r3, [sp, #20]
-  23:main.c        ****    mc._pwmR_Write = &pwmB_Write;
- 184              		.loc 2 23 0
- 185 000a 154B     		ldr	r3, .L9+4
- 186 000c 0693     		str	r3, [sp, #24]
-  24:main.c        ****    mc._dirL_Write = &dirA_Write;
- 187              		.loc 2 24 0
- 188 000e 154B     		ldr	r3, .L9+8
- 189 0010 0793     		str	r3, [sp, #28]
-  25:main.c        ****    mc._dirR_Write = &dirB_Write;
- 190              		.loc 2 25 0
- 191 0012 154B     		ldr	r3, .L9+12
- 192 0014 0893     		str	r3, [sp, #32]
- 193              	.L8:
-  26:main.c        ****     
-  27:main.c        ****     
-  28:main.c        ****     for(;;)
-  29:main.c        ****     {
-  30:main.c        ****         /* Place your application code here. */
-  31:main.c        ****         BlueLED_Write(1);
- 194              		.loc 2 31 0 discriminator 1
- 195 0016 0120     		movs	r0, #1
- 196 0018 FFF7FEFF 		bl	BlueLED_Write
- 197              	.LVL16:
-  32:main.c        ****         moveTog(mc, 255);
- 198              		.loc 2 32 0 discriminator 1
- 199 001c FF23     		movs	r3, #255
- 200 001e 0193     		str	r3, [sp, #4]
- 201 0020 099B     		ldr	r3, [sp, #36]
- 202 0022 0393     		str	r3, [sp, #12]
- 203 0024 0093     		str	r3, [sp]
- 204 0026 0598     		ldr	r0, [sp, #20]
- 205 0028 0699     		ldr	r1, [sp, #24]
- 206 002a 079A     		ldr	r2, [sp, #28]
- 207 002c 089B     		ldr	r3, [sp, #32]
- 208 002e FFF7FEFF 		bl	moveTog
- 209              	.LVL17:
-  33:main.c        ****         CyDelay(5000);
- 210              		.loc 2 33 0 discriminator 1
- 211 0032 0E4C     		ldr	r4, .L9+16
- 212 0034 2000     		movs	r0, r4
- 213 0036 FFF7FEFF 		bl	CyDelay
- 214              	.LVL18:
-  34:main.c        ****         
-  35:main.c        ****         BlueLED_Write(0);
- 215              		.loc 2 35 0 discriminator 1
- 216 003a 0020     		movs	r0, #0
- 217 003c FFF7FEFF 		bl	BlueLED_Write
- 218              	.LVL19:
-  36:main.c        ****         stopMoving(mc);
- 219              		.loc 2 36 0 discriminator 1
- 220 0040 099B     		ldr	r3, [sp, #36]
- 221 0042 0393     		str	r3, [sp, #12]
- 222 0044 0093     		str	r3, [sp]
- 223 0046 0598     		ldr	r0, [sp, #20]
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 7
+ 226              		@ frame_needed = 0, uses_anonymous_args = 0
+ 227 0000 00B5     		push	{lr}
+ 228              		.cfi_def_cfa_offset 4
+ 229              		.cfi_offset 14, -4
+ 230 0002 8DB0     		sub	sp, sp, #52
+ 231              		.cfi_def_cfa_offset 56
+  29:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+ 232              		.loc 2 29 0
+ 233              		.syntax divided
+ 234              	@ 29 "main.c" 1
+ 235 0004 62B6     		CPSIE   i
+ 236              	@ 0 "" 2
+  30:main.c        **** 
+  31:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  32:main.c        ****    struct  MotorController mc;
+  33:main.c        ****     
+  34:main.c        ****    mc._pwmL_Write = &pwmA_Write;
+ 237              		.loc 2 34 0
+ 238              		.thumb
+ 239              		.syntax unified
+ 240 0006 444B     		ldr	r3, .L20
+ 241 0008 0793     		str	r3, [sp, #28]
+  35:main.c        ****    mc._pwmR_Write = &pwmB_Write;
+ 242              		.loc 2 35 0
+ 243 000a 444B     		ldr	r3, .L20+4
+ 244 000c 0893     		str	r3, [sp, #32]
+  36:main.c        ****    mc._dirL_Write = &dirA_Write;
+ 245              		.loc 2 36 0
+ 246 000e 444B     		ldr	r3, .L20+8
+ 247 0010 0993     		str	r3, [sp, #36]
+  37:main.c        ****    mc._dirR_Write = &dirB_Write;
+ 248              		.loc 2 37 0
+ 249 0012 444B     		ldr	r3, .L20+12
+ 250 0014 0A93     		str	r3, [sp, #40]
+ 251              	.L9:
+  38:main.c        ****     
+  39:main.c        ****     
+  40:main.c        ****     for(;;)
+  41:main.c        ****     {
+  42:main.c        ****         /* Place your application code here. */
+  43:main.c        ****     CyDelay(50);
+ 252              		.loc 2 43 0
+ 253 0016 3220     		movs	r0, #50
+ 254 0018 FFF7FEFF 		bl	CyDelay
+ 255              	.LVL17:
+  44:main.c        ****     switch (state)
+ 256              		.loc 2 44 0
+ 257 001c 424B     		ldr	r3, .L20+16
+ 258 001e 1A78     		ldrb	r2, [r3]
+ 259 0020 072A     		cmp	r2, #7
+ 260 0022 F8D8     		bhi	.L9
+ 261 0024 9300     		lsls	r3, r2, #2
+ 262 0026 414A     		ldr	r2, .L20+20
+ 263 0028 D358     		ldr	r3, [r2, r3]
+ 264 002a 9F46     		mov	pc, r3
+ 265              		.section	.rodata
+ 266              		.align	2
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 8
 
 
- 224 0048 0699     		ldr	r1, [sp, #24]
- 225 004a 079A     		ldr	r2, [sp, #28]
- 226 004c 089B     		ldr	r3, [sp, #32]
- 227 004e FFF7FEFF 		bl	stopMoving
- 228              	.LVL20:
-  37:main.c        ****         CyDelay(5000);
- 229              		.loc 2 37 0 discriminator 1
- 230 0052 2000     		movs	r0, r4
- 231 0054 FFF7FEFF 		bl	CyDelay
- 232              	.LVL21:
- 233 0058 DDE7     		b	.L8
- 234              	.L10:
- 235 005a C046     		.align	2
- 236              	.L9:
- 237 005c 00000000 		.word	pwmA_Write
- 238 0060 00000000 		.word	pwmB_Write
- 239 0064 00000000 		.word	dirA_Write
- 240 0068 00000000 		.word	dirB_Write
- 241 006c 88130000 		.word	5000
- 242              		.cfi_endproc
- 243              	.LFE34:
- 244              		.size	main, .-main
- 245              		.text
- 246              	.Letext0:
- 247              		.file 3 "Generated_Source\\PSoC4/BlueLED.h"
- 248              		.file 4 "Generated_Source\\PSoC4/CyLib.h"
- 249              		.file 5 "Generated_Source\\PSoC4/cytypes.h"
- 250              		.section	.debug_info,"",%progbits
- 251              	.Ldebug_info0:
- 252 0000 DD020000 		.4byte	0x2dd
- 253 0004 0400     		.2byte	0x4
- 254 0006 00000000 		.4byte	.Ldebug_abbrev0
- 255 000a 04       		.byte	0x4
- 256 000b 01       		.uleb128 0x1
- 257 000c 08010000 		.4byte	.LASF25
- 258 0010 0C       		.byte	0xc
- 259 0011 B3010000 		.4byte	.LASF26
- 260 0015 B3000000 		.4byte	.LASF27
- 261 0019 00000000 		.4byte	.Ldebug_ranges0+0
- 262 001d 00000000 		.4byte	0
- 263 0021 00000000 		.4byte	.Ldebug_line0
- 264 0025 02       		.uleb128 0x2
- 265 0026 01       		.byte	0x1
- 266 0027 06       		.byte	0x6
- 267 0028 FA010000 		.4byte	.LASF0
- 268 002c 02       		.uleb128 0x2
- 269 002d 01       		.byte	0x1
- 270 002e 08       		.byte	0x8
- 271 002f 38000000 		.4byte	.LASF1
- 272 0033 02       		.uleb128 0x2
- 273 0034 02       		.byte	0x2
- 274 0035 05       		.byte	0x5
- 275 0036 BF010000 		.4byte	.LASF2
- 276 003a 02       		.uleb128 0x2
- 277 003b 02       		.byte	0x2
- 278 003c 07       		.byte	0x7
- 279 003d 17000000 		.4byte	.LASF3
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 8
+ 267              	.L11:
+ 268 0000 2C000000 		.word	.L10
+ 269 0004 52000000 		.word	.L12
+ 270 0008 66000000 		.word	.L13
+ 271 000c 8C000000 		.word	.L14
+ 272 0010 A0000000 		.word	.L15
+ 273 0014 C8000000 		.word	.L16
+ 274 0018 DC000000 		.word	.L17
+ 275 001c 04010000 		.word	.L18
+ 276              		.section	.text.main
+ 277              	.L10:
+  45:main.c        ****        {
+  46:main.c        ****         case STOP:  //Statements to execute
+  47:main.c        ****           move_cnt = 100;
+ 278              		.loc 2 47 0
+ 279 002c 6422     		movs	r2, #100
+ 280 002e 404B     		ldr	r3, .L20+24
+ 281 0030 1A60     		str	r2, [r3]
+  48:main.c        ****           move(mc, 0,0);
+ 282              		.loc 2 48 0
+ 283 0032 0023     		movs	r3, #0
+ 284 0034 0293     		str	r3, [sp, #8]
+ 285 0036 0193     		str	r3, [sp, #4]
+ 286 0038 0B9B     		ldr	r3, [sp, #44]
+ 287 003a 0593     		str	r3, [sp, #20]
+ 288 003c 0093     		str	r3, [sp]
+ 289 003e 0798     		ldr	r0, [sp, #28]
+ 290 0040 0899     		ldr	r1, [sp, #32]
+ 291 0042 099A     		ldr	r2, [sp, #36]
+ 292 0044 0A9B     		ldr	r3, [sp, #40]
+ 293 0046 FFF7FEFF 		bl	move
+ 294              	.LVL18:
+  49:main.c        ****           state = WAIT_STOP;
+ 295              		.loc 2 49 0
+ 296 004a 0122     		movs	r2, #1
+ 297 004c 364B     		ldr	r3, .L20+16
+ 298 004e 1A70     		strb	r2, [r3]
+  50:main.c        **** 
+  51:main.c        ****           break;
+ 299              		.loc 2 51 0
+ 300 0050 E1E7     		b	.L9
+ 301              	.L12:
+  52:main.c        ****         case WAIT_STOP:
+  53:main.c        ****           move_cnt--;
+ 302              		.loc 2 53 0
+ 303 0052 374A     		ldr	r2, .L20+24
+ 304 0054 1368     		ldr	r3, [r2]
+ 305 0056 013B     		subs	r3, r3, #1
+ 306 0058 1360     		str	r3, [r2]
+  54:main.c        ****           if(move_cnt == 0) {
+ 307              		.loc 2 54 0
+ 308 005a 002B     		cmp	r3, #0
+ 309 005c DBD1     		bne	.L9
+  55:main.c        ****              state = FORWARD;
+ 310              		.loc 2 55 0
+ 311 005e 0222     		movs	r2, #2
+ 312 0060 314B     		ldr	r3, .L20+16
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 9
 
 
- 280 0041 02       		.uleb128 0x2
- 281 0042 04       		.byte	0x4
- 282 0043 05       		.byte	0x5
- 283 0044 E5010000 		.4byte	.LASF4
- 284 0048 02       		.uleb128 0x2
- 285 0049 04       		.byte	0x4
- 286 004a 07       		.byte	0x7
- 287 004b 46000000 		.4byte	.LASF5
- 288 004f 02       		.uleb128 0x2
- 289 0050 08       		.byte	0x8
- 290 0051 05       		.byte	0x5
- 291 0052 A5010000 		.4byte	.LASF6
- 292 0056 02       		.uleb128 0x2
- 293 0057 08       		.byte	0x8
- 294 0058 07       		.byte	0x7
- 295 0059 F1000000 		.4byte	.LASF7
- 296 005d 03       		.uleb128 0x3
- 297 005e 04       		.byte	0x4
- 298 005f 05       		.byte	0x5
- 299 0060 696E7400 		.ascii	"int\000"
- 300 0064 02       		.uleb128 0x2
- 301 0065 04       		.byte	0x4
- 302 0066 07       		.byte	0x7
- 303 0067 9A000000 		.4byte	.LASF8
- 304 006b 04       		.uleb128 0x4
- 305 006c 58000000 		.4byte	.LASF28
- 306 0070 05       		.byte	0x5
- 307 0071 F701     		.2byte	0x1f7
- 308 0073 2C000000 		.4byte	0x2c
- 309 0077 02       		.uleb128 0x2
- 310 0078 04       		.byte	0x4
- 311 0079 04       		.byte	0x4
- 312 007a 32000000 		.4byte	.LASF9
- 313 007e 02       		.uleb128 0x2
- 314 007f 08       		.byte	0x8
- 315 0080 04       		.byte	0x4
- 316 0081 78000000 		.4byte	.LASF10
- 317 0085 02       		.uleb128 0x2
- 318 0086 01       		.byte	0x1
- 319 0087 08       		.byte	0x8
- 320 0088 BA010000 		.4byte	.LASF11
- 321 008c 02       		.uleb128 0x2
- 322 008d 04       		.byte	0x4
- 323 008e 07       		.byte	0x7
- 324 008f 9C010000 		.4byte	.LASF12
- 325 0093 02       		.uleb128 0x2
- 326 0094 08       		.byte	0x8
- 327 0095 04       		.byte	0x4
- 328 0096 EE010000 		.4byte	.LASF13
- 329 009a 05       		.uleb128 0x5
- 330 009b D5010000 		.4byte	.LASF29
- 331 009f 14       		.byte	0x14
- 332 00a0 01       		.byte	0x1
- 333 00a1 1B       		.byte	0x1b
- 334 00a2 E3000000 		.4byte	0xe3
- 335 00a6 06       		.uleb128 0x6
- 336 00a7 A7000000 		.4byte	.LASF14
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 9
+ 313 0062 1A70     		strb	r2, [r3]
+ 314 0064 D7E7     		b	.L9
+ 315              	.L13:
+  56:main.c        ****           }
+  57:main.c        ****           break;
+  58:main.c        ****         case FORWARD:   //Statements to execute
+  59:main.c        ****           move_cnt = 100;
+ 316              		.loc 2 59 0
+ 317 0066 6422     		movs	r2, #100
+ 318 0068 314B     		ldr	r3, .L20+24
+ 319 006a 1A60     		str	r2, [r3]
+  60:main.c        ****           move(mc, 255,255);
+ 320              		.loc 2 60 0
+ 321 006c FF23     		movs	r3, #255
+ 322 006e 0293     		str	r3, [sp, #8]
+ 323 0070 0193     		str	r3, [sp, #4]
+ 324 0072 0B9B     		ldr	r3, [sp, #44]
+ 325 0074 0593     		str	r3, [sp, #20]
+ 326 0076 0093     		str	r3, [sp]
+ 327 0078 0798     		ldr	r0, [sp, #28]
+ 328 007a 0899     		ldr	r1, [sp, #32]
+ 329 007c 099A     		ldr	r2, [sp, #36]
+ 330 007e 0A9B     		ldr	r3, [sp, #40]
+ 331 0080 FFF7FEFF 		bl	move
+ 332              	.LVL19:
+  61:main.c        ****           state = MOVE_FORWARD;
+ 333              		.loc 2 61 0
+ 334 0084 0322     		movs	r2, #3
+ 335 0086 284B     		ldr	r3, .L20+16
+ 336 0088 1A70     		strb	r2, [r3]
+  62:main.c        **** 
+  63:main.c        ****           break;
+ 337              		.loc 2 63 0
+ 338 008a C4E7     		b	.L9
+ 339              	.L14:
+  64:main.c        ****         case MOVE_FORWARD:   //Statements to execute
+  65:main.c        ****           move_cnt--;
+ 340              		.loc 2 65 0
+ 341 008c 284A     		ldr	r2, .L20+24
+ 342 008e 1368     		ldr	r3, [r2]
+ 343 0090 013B     		subs	r3, r3, #1
+ 344 0092 1360     		str	r3, [r2]
+  66:main.c        ****           // if == zero - then go forward
+  67:main.c        ****           if(move_cnt == 0) {
+ 345              		.loc 2 67 0
+ 346 0094 002B     		cmp	r3, #0
+ 347 0096 BED1     		bne	.L9
+  68:main.c        ****              state = LEFT;
+ 348              		.loc 2 68 0
+ 349 0098 0422     		movs	r2, #4
+ 350 009a 234B     		ldr	r3, .L20+16
+ 351 009c 1A70     		strb	r2, [r3]
+ 352 009e BAE7     		b	.L9
+ 353              	.L15:
+  69:main.c        ****           }
+  70:main.c        ****           break;
+  71:main.c        ****         case LEFT:
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 10
 
 
- 337 00ab 01       		.byte	0x1
- 338 00ac 1F       		.byte	0x1f
- 339 00ad EE000000 		.4byte	0xee
- 340 00b1 00       		.byte	0
- 341 00b2 06       		.uleb128 0x6
- 342 00b3 0B000000 		.4byte	.LASF15
- 343 00b7 01       		.byte	0x1
- 344 00b8 20       		.byte	0x20
- 345 00b9 EE000000 		.4byte	0xee
- 346 00bd 04       		.byte	0x4
- 347 00be 06       		.uleb128 0x6
- 348 00bf C9010000 		.4byte	.LASF16
- 349 00c3 01       		.byte	0x1
- 350 00c4 21       		.byte	0x21
- 351 00c5 EE000000 		.4byte	0xee
- 352 00c9 08       		.byte	0x8
- 353 00ca 06       		.uleb128 0x6
- 354 00cb 5E000000 		.4byte	.LASF17
- 355 00cf 01       		.byte	0x1
- 356 00d0 22       		.byte	0x22
- 357 00d1 EE000000 		.4byte	0xee
- 358 00d5 0C       		.byte	0xc
- 359 00d6 06       		.uleb128 0x6
- 360 00d7 84000000 		.4byte	.LASF18
- 361 00db 01       		.byte	0x1
- 362 00dc 26       		.byte	0x26
- 363 00dd 5D000000 		.4byte	0x5d
- 364 00e1 10       		.byte	0x10
- 365 00e2 00       		.byte	0
- 366 00e3 07       		.uleb128 0x7
- 367 00e4 EE000000 		.4byte	0xee
- 368 00e8 08       		.uleb128 0x8
- 369 00e9 6B000000 		.4byte	0x6b
- 370 00ed 00       		.byte	0
- 371 00ee 09       		.uleb128 0x9
- 372 00ef 04       		.byte	0x4
- 373 00f0 E3000000 		.4byte	0xe3
- 374 00f4 0A       		.uleb128 0xa
- 375 00f5 92000000 		.4byte	.LASF21
- 376 00f9 01       		.byte	0x1
- 377 00fa 29       		.byte	0x29
- 378 00fb 00000000 		.4byte	.LFB32
- 379 00ff 4A000000 		.4byte	.LFE32-.LFB32
- 380 0103 01       		.uleb128 0x1
- 381 0104 9C       		.byte	0x9c
- 382 0105 D0010000 		.4byte	0x1d0
- 383 0109 0B       		.uleb128 0xb
- 384 010a 6D6300   		.ascii	"mc\000"
- 385 010d 01       		.byte	0x1
- 386 010e 29       		.byte	0x29
- 387 010f 9A000000 		.4byte	0x9a
- 388 0113 02       		.uleb128 0x2
- 389 0114 91       		.byte	0x91
- 390 0115 70       		.sleb128 -16
- 391 0116 0C       		.uleb128 0xc
- 392 0117 96010000 		.4byte	.LASF19
- 393 011b 01       		.byte	0x1
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 10
+  72:main.c        ****           move_cnt = 100;
+ 354              		.loc 2 72 0
+ 355 00a0 6422     		movs	r2, #100
+ 356 00a2 234B     		ldr	r3, .L20+24
+ 357 00a4 1A60     		str	r2, [r3]
+  73:main.c        ****           move(mc, 255,0);
+ 358              		.loc 2 73 0
+ 359 00a6 0023     		movs	r3, #0
+ 360 00a8 0293     		str	r3, [sp, #8]
+ 361 00aa FF33     		adds	r3, r3, #255
+ 362 00ac 0193     		str	r3, [sp, #4]
+ 363 00ae 0B9B     		ldr	r3, [sp, #44]
+ 364 00b0 0593     		str	r3, [sp, #20]
+ 365 00b2 0093     		str	r3, [sp]
+ 366 00b4 0798     		ldr	r0, [sp, #28]
+ 367 00b6 0899     		ldr	r1, [sp, #32]
+ 368 00b8 099A     		ldr	r2, [sp, #36]
+ 369 00ba 0A9B     		ldr	r3, [sp, #40]
+ 370 00bc FFF7FEFF 		bl	move
+ 371              	.LVL20:
+  74:main.c        ****           state = TURN_LEFT;
+ 372              		.loc 2 74 0
+ 373 00c0 0522     		movs	r2, #5
+ 374 00c2 194B     		ldr	r3, .L20+16
+ 375 00c4 1A70     		strb	r2, [r3]
+  75:main.c        **** 
+  76:main.c        ****           break;
+ 376              		.loc 2 76 0
+ 377 00c6 A6E7     		b	.L9
+ 378              	.L16:
+  77:main.c        ****         case TURN_LEFT:
+  78:main.c        ****           // decrement turn counter
+  79:main.c        ****           move_cnt--;
+ 379              		.loc 2 79 0
+ 380 00c8 194A     		ldr	r2, .L20+24
+ 381 00ca 1368     		ldr	r3, [r2]
+ 382 00cc 013B     		subs	r3, r3, #1
+ 383 00ce 1360     		str	r3, [r2]
+  80:main.c        ****           // if == zero - then go forward
+  81:main.c        ****           if(move_cnt == 0) {
+ 384              		.loc 2 81 0
+ 385 00d0 002B     		cmp	r3, #0
+ 386 00d2 A0D1     		bne	.L9
+  82:main.c        ****              state = RIGHT;
+ 387              		.loc 2 82 0
+ 388 00d4 0622     		movs	r2, #6
+ 389 00d6 144B     		ldr	r3, .L20+16
+ 390 00d8 1A70     		strb	r2, [r3]
+ 391 00da 9CE7     		b	.L9
+ 392              	.L17:
+  83:main.c        ****           } 
+  84:main.c        ****          break;
+  85:main.c        ****         case RIGHT:
+  86:main.c        ****           move_cnt = 100;
+ 393              		.loc 2 86 0
+ 394 00dc 6422     		movs	r2, #100
+ 395 00de 144B     		ldr	r3, .L20+24
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 11
 
 
- 394 011c 29       		.byte	0x29
- 395 011d 6B000000 		.4byte	0x6b
- 396 0121 00000000 		.4byte	.LLST0
- 397 0125 0D       		.uleb128 0xd
- 398 0126 06020000 		.4byte	.LASF20
- 399 012a 01       		.byte	0x1
- 400 012b 2B       		.byte	0x2b
- 401 012c 6B000000 		.4byte	0x6b
- 402 0130 00       		.byte	0
- 403 0131 0E       		.uleb128 0xe
- 404 0132 16000000 		.4byte	.LBB2
- 405 0136 06000000 		.4byte	.LBE2-.LBB2
- 406 013a 5B010000 		.4byte	0x15b
- 407 013e 0F       		.uleb128 0xf
- 408 013f 5F6100   		.ascii	"_a\000"
- 409 0142 01       		.byte	0x1
- 410 0143 3C       		.byte	0x3c
- 411 0144 6B000000 		.4byte	0x6b
- 412 0148 36000000 		.4byte	.LLST1
- 413 014c 0F       		.uleb128 0xf
- 414 014d 5F6200   		.ascii	"_b\000"
- 415 0150 01       		.byte	0x1
- 416 0151 3C       		.byte	0x3c
- 417 0152 5D000000 		.4byte	0x5d
- 418 0156 6C000000 		.4byte	.LLST2
- 419 015a 00       		.byte	0
- 420 015b 0E       		.uleb128 0xe
- 421 015c 1C000000 		.4byte	.LBB3
- 422 0160 06000000 		.4byte	.LBE3-.LBB3
- 423 0164 85010000 		.4byte	0x185
- 424 0168 0F       		.uleb128 0xf
- 425 0169 5F6100   		.ascii	"_a\000"
- 426 016c 01       		.byte	0x1
- 427 016d 3D       		.byte	0x3d
- 428 016e 6B000000 		.4byte	0x6b
- 429 0172 80000000 		.4byte	.LLST3
- 430 0176 0F       		.uleb128 0xf
- 431 0177 5F6200   		.ascii	"_b\000"
- 432 017a 01       		.byte	0x1
- 433 017b 3D       		.byte	0x3d
- 434 017c 5D000000 		.4byte	0x5d
- 435 0180 93000000 		.4byte	.LLST4
- 436 0184 00       		.byte	0
- 437 0185 10       		.uleb128 0x10
- 438 0186 30000000 		.4byte	.LVL8
- 439 018a 03       		.uleb128 0x3
- 440 018b 91       		.byte	0x91
- 441 018c 58       		.sleb128 -40
- 442 018d 06       		.byte	0x6
- 443 018e 98010000 		.4byte	0x198
- 444 0192 11       		.uleb128 0x11
- 445 0193 01       		.uleb128 0x1
- 446 0194 50       		.byte	0x50
- 447 0195 01       		.uleb128 0x1
- 448 0196 30       		.byte	0x30
- 449 0197 00       		.byte	0
- 450 0198 10       		.uleb128 0x10
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 11
+ 396 00e0 1A60     		str	r2, [r3]
+  87:main.c        ****           move(mc, 0,255);
+ 397              		.loc 2 87 0
+ 398 00e2 FF23     		movs	r3, #255
+ 399 00e4 0293     		str	r3, [sp, #8]
+ 400 00e6 0023     		movs	r3, #0
+ 401 00e8 0193     		str	r3, [sp, #4]
+ 402 00ea 0B9B     		ldr	r3, [sp, #44]
+ 403 00ec 0593     		str	r3, [sp, #20]
+ 404 00ee 0093     		str	r3, [sp]
+ 405 00f0 0798     		ldr	r0, [sp, #28]
+ 406 00f2 0899     		ldr	r1, [sp, #32]
+ 407 00f4 099A     		ldr	r2, [sp, #36]
+ 408 00f6 0A9B     		ldr	r3, [sp, #40]
+ 409 00f8 FFF7FEFF 		bl	move
+ 410              	.LVL21:
+  88:main.c        ****           state = TURN_RIGHT;
+ 411              		.loc 2 88 0
+ 412 00fc 0722     		movs	r2, #7
+ 413 00fe 0A4B     		ldr	r3, .L20+16
+ 414 0100 1A70     		strb	r2, [r3]
+  89:main.c        **** 
+  90:main.c        ****           break;
+ 415              		.loc 2 90 0
+ 416 0102 88E7     		b	.L9
+ 417              	.L18:
+  91:main.c        ****         case TURN_RIGHT:
+  92:main.c        ****           // decrement turn counter
+  93:main.c        ****           move_cnt--;
+ 418              		.loc 2 93 0
+ 419 0104 0A4A     		ldr	r2, .L20+24
+ 420 0106 1368     		ldr	r3, [r2]
+ 421 0108 013B     		subs	r3, r3, #1
+ 422 010a 1360     		str	r3, [r2]
+  94:main.c        ****           // if == zero - then go forward
+  95:main.c        ****           if(move_cnt == 0) {
+ 423              		.loc 2 95 0
+ 424 010c 002B     		cmp	r3, #0
+ 425 010e 82D1     		bne	.L9
+  96:main.c        ****              state = FORWARD;
+ 426              		.loc 2 96 0
+ 427 0110 0222     		movs	r2, #2
+ 428 0112 054B     		ldr	r3, .L20+16
+ 429 0114 1A70     		strb	r2, [r3]
+ 430 0116 7EE7     		b	.L9
+ 431              	.L21:
+ 432              		.align	2
+ 433              	.L20:
+ 434 0118 00000000 		.word	pwmA_Write
+ 435 011c 00000000 		.word	pwmB_Write
+ 436 0120 00000000 		.word	dirA_Write
+ 437 0124 00000000 		.word	dirB_Write
+ 438 0128 00000000 		.word	state
+ 439 012c 00000000 		.word	.L11
+ 440 0130 00000000 		.word	move_cnt
+ 441              		.cfi_endproc
+ 442              	.LFE35:
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 12
 
 
- 451 0199 36000000 		.4byte	.LVL9
- 452 019d 03       		.uleb128 0x3
- 453 019e 91       		.byte	0x91
- 454 019f 5C       		.sleb128 -36
- 455 01a0 06       		.byte	0x6
- 456 01a1 AB010000 		.4byte	0x1ab
- 457 01a5 11       		.uleb128 0x11
- 458 01a6 01       		.uleb128 0x1
- 459 01a7 50       		.byte	0x50
- 460 01a8 01       		.uleb128 0x1
- 461 01a9 30       		.byte	0x30
- 462 01aa 00       		.byte	0
- 463 01ab 10       		.uleb128 0x10
- 464 01ac 3C000000 		.4byte	.LVL10
- 465 01b0 03       		.uleb128 0x3
- 466 01b1 91       		.byte	0x91
- 467 01b2 50       		.sleb128 -48
- 468 01b3 06       		.byte	0x6
- 469 01b4 BF010000 		.4byte	0x1bf
- 470 01b8 11       		.uleb128 0x11
- 471 01b9 01       		.uleb128 0x1
- 472 01ba 50       		.byte	0x50
- 473 01bb 02       		.uleb128 0x2
- 474 01bc 74       		.byte	0x74
- 475 01bd 00       		.sleb128 0
- 476 01be 00       		.byte	0
- 477 01bf 12       		.uleb128 0x12
- 478 01c0 42000000 		.4byte	.LVL11
- 479 01c4 03       		.uleb128 0x3
- 480 01c5 91       		.byte	0x91
- 481 01c6 54       		.sleb128 -44
- 482 01c7 06       		.byte	0x6
- 483 01c8 11       		.uleb128 0x11
- 484 01c9 01       		.uleb128 0x1
- 485 01ca 50       		.byte	0x50
- 486 01cb 02       		.uleb128 0x2
- 487 01cc 74       		.byte	0x74
- 488 01cd 00       		.sleb128 0
- 489 01ce 00       		.byte	0
- 490 01cf 00       		.byte	0
- 491 01d0 0A       		.uleb128 0xa
- 492 01d1 00000000 		.4byte	.LASF22
- 493 01d5 01       		.byte	0x1
- 494 01d6 4A       		.byte	0x4a
- 495 01d7 00000000 		.4byte	.LFB33
- 496 01db 2A000000 		.4byte	.LFE33-.LFB33
- 497 01df 01       		.uleb128 0x1
- 498 01e0 9C       		.byte	0x9c
- 499 01e1 3B020000 		.4byte	0x23b
- 500 01e5 0B       		.uleb128 0xb
- 501 01e6 6D6300   		.ascii	"mc\000"
- 502 01e9 01       		.byte	0x1
- 503 01ea 4A       		.byte	0x4a
- 504 01eb 9A000000 		.4byte	0x9a
- 505 01ef 02       		.uleb128 0x2
- 506 01f0 91       		.byte	0x91
- 507 01f1 70       		.sleb128 -16
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 12
+ 443              		.size	main, .-main
+ 444              		.comm	move_cnt,4,4
+ 445              		.comm	state,1,1
+ 446              		.text
+ 447              	.Letext0:
+ 448              		.file 3 "Generated_Source\\PSoC4/cytypes.h"
+ 449              		.file 4 "Generated_Source\\PSoC4/CyLib.h"
+ 450              		.section	.debug_info,"",%progbits
+ 451              	.Ldebug_info0:
+ 452 0000 28030000 		.4byte	0x328
+ 453 0004 0400     		.2byte	0x4
+ 454 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 455 000a 04       		.byte	0x4
+ 456 000b 01       		.uleb128 0x1
+ 457 000c 14010000 		.4byte	.LASF29
+ 458 0010 0C       		.byte	0xc
+ 459 0011 BF010000 		.4byte	.LASF30
+ 460 0015 BF000000 		.4byte	.LASF31
+ 461 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 462 001d 00000000 		.4byte	0
+ 463 0021 00000000 		.4byte	.Ldebug_line0
+ 464 0025 02       		.uleb128 0x2
+ 465 0026 01       		.byte	0x1
+ 466 0027 06       		.byte	0x6
+ 467 0028 10020000 		.4byte	.LASF0
+ 468 002c 02       		.uleb128 0x2
+ 469 002d 01       		.byte	0x1
+ 470 002e 08       		.byte	0x8
+ 471 002f 44000000 		.4byte	.LASF1
+ 472 0033 02       		.uleb128 0x2
+ 473 0034 02       		.byte	0x2
+ 474 0035 05       		.byte	0x5
+ 475 0036 D0010000 		.4byte	.LASF2
+ 476 003a 02       		.uleb128 0x2
+ 477 003b 02       		.byte	0x2
+ 478 003c 07       		.byte	0x7
+ 479 003d 2B000000 		.4byte	.LASF3
+ 480 0041 02       		.uleb128 0x2
+ 481 0042 04       		.byte	0x4
+ 482 0043 05       		.byte	0x5
+ 483 0044 F6010000 		.4byte	.LASF4
+ 484 0048 02       		.uleb128 0x2
+ 485 0049 04       		.byte	0x4
+ 486 004a 07       		.byte	0x7
+ 487 004b 52000000 		.4byte	.LASF5
+ 488 004f 02       		.uleb128 0x2
+ 489 0050 08       		.byte	0x8
+ 490 0051 05       		.byte	0x5
+ 491 0052 B1010000 		.4byte	.LASF6
+ 492 0056 02       		.uleb128 0x2
+ 493 0057 08       		.byte	0x8
+ 494 0058 07       		.byte	0x7
+ 495 0059 FD000000 		.4byte	.LASF7
+ 496 005d 03       		.uleb128 0x3
+ 497 005e 04       		.byte	0x4
+ 498 005f 05       		.byte	0x5
+ 499 0060 696E7400 		.ascii	"int\000"
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 13
 
 
- 508 01f2 10       		.uleb128 0x10
- 509 01f3 10000000 		.4byte	.LVL12
- 510 01f7 03       		.uleb128 0x3
- 511 01f8 91       		.byte	0x91
- 512 01f9 58       		.sleb128 -40
- 513 01fa 06       		.byte	0x6
- 514 01fb 05020000 		.4byte	0x205
- 515 01ff 11       		.uleb128 0x11
- 516 0200 01       		.uleb128 0x1
- 517 0201 50       		.byte	0x50
- 518 0202 01       		.uleb128 0x1
- 519 0203 31       		.byte	0x31
- 520 0204 00       		.byte	0
- 521 0205 10       		.uleb128 0x10
- 522 0206 16000000 		.4byte	.LVL13
- 523 020a 03       		.uleb128 0x3
- 524 020b 91       		.byte	0x91
- 525 020c 5C       		.sleb128 -36
- 526 020d 06       		.byte	0x6
- 527 020e 18020000 		.4byte	0x218
- 528 0212 11       		.uleb128 0x11
- 529 0213 01       		.uleb128 0x1
- 530 0214 50       		.byte	0x50
- 531 0215 01       		.uleb128 0x1
- 532 0216 31       		.byte	0x31
- 533 0217 00       		.byte	0
- 534 0218 10       		.uleb128 0x10
- 535 0219 1C000000 		.4byte	.LVL14
- 536 021d 03       		.uleb128 0x3
- 537 021e 91       		.byte	0x91
- 538 021f 50       		.sleb128 -48
- 539 0220 06       		.byte	0x6
- 540 0221 2B020000 		.4byte	0x22b
- 541 0225 11       		.uleb128 0x11
- 542 0226 01       		.uleb128 0x1
- 543 0227 50       		.byte	0x50
- 544 0228 01       		.uleb128 0x1
- 545 0229 31       		.byte	0x31
- 546 022a 00       		.byte	0
- 547 022b 12       		.uleb128 0x12
- 548 022c 22000000 		.4byte	.LVL15
- 549 0230 03       		.uleb128 0x3
- 550 0231 91       		.byte	0x91
- 551 0232 54       		.sleb128 -44
- 552 0233 06       		.byte	0x6
- 553 0234 11       		.uleb128 0x11
- 554 0235 01       		.uleb128 0x1
- 555 0236 50       		.byte	0x50
- 556 0237 01       		.uleb128 0x1
- 557 0238 31       		.byte	0x31
- 558 0239 00       		.byte	0
- 559 023a 00       		.byte	0
- 560 023b 13       		.uleb128 0x13
- 561 023c 7F000000 		.4byte	.LASF30
- 562 0240 02       		.byte	0x2
- 563 0241 0F       		.byte	0xf
- 564 0242 5D000000 		.4byte	0x5d
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 13
+ 500 0064 02       		.uleb128 0x2
+ 501 0065 04       		.byte	0x4
+ 502 0066 07       		.byte	0x7
+ 503 0067 A6000000 		.4byte	.LASF8
+ 504 006b 04       		.uleb128 0x4
+ 505 006c 64000000 		.4byte	.LASF32
+ 506 0070 03       		.byte	0x3
+ 507 0071 F701     		.2byte	0x1f7
+ 508 0073 2C000000 		.4byte	0x2c
+ 509 0077 02       		.uleb128 0x2
+ 510 0078 04       		.byte	0x4
+ 511 0079 04       		.byte	0x4
+ 512 007a 3E000000 		.4byte	.LASF9
+ 513 007e 02       		.uleb128 0x2
+ 514 007f 08       		.byte	0x8
+ 515 0080 04       		.byte	0x4
+ 516 0081 76000000 		.4byte	.LASF10
+ 517 0085 02       		.uleb128 0x2
+ 518 0086 01       		.byte	0x1
+ 519 0087 08       		.byte	0x8
+ 520 0088 FF010000 		.4byte	.LASF11
+ 521 008c 02       		.uleb128 0x2
+ 522 008d 04       		.byte	0x4
+ 523 008e 07       		.byte	0x7
+ 524 008f A8010000 		.4byte	.LASF12
+ 525 0093 02       		.uleb128 0x2
+ 526 0094 08       		.byte	0x8
+ 527 0095 04       		.byte	0x4
+ 528 0096 04020000 		.4byte	.LASF13
+ 529 009a 05       		.uleb128 0x5
+ 530 009b E6010000 		.4byte	.LASF33
+ 531 009f 14       		.byte	0x14
+ 532 00a0 01       		.byte	0x1
+ 533 00a1 1B       		.byte	0x1b
+ 534 00a2 E3000000 		.4byte	0xe3
+ 535 00a6 06       		.uleb128 0x6
+ 536 00a7 B3000000 		.4byte	.LASF14
+ 537 00ab 01       		.byte	0x1
+ 538 00ac 1F       		.byte	0x1f
+ 539 00ad EE000000 		.4byte	0xee
+ 540 00b1 00       		.byte	0
+ 541 00b2 06       		.uleb128 0x6
+ 542 00b3 0B000000 		.4byte	.LASF15
+ 543 00b7 01       		.byte	0x1
+ 544 00b8 20       		.byte	0x20
+ 545 00b9 EE000000 		.4byte	0xee
+ 546 00bd 04       		.byte	0x4
+ 547 00be 06       		.uleb128 0x6
+ 548 00bf DA010000 		.4byte	.LASF16
+ 549 00c3 01       		.byte	0x1
+ 550 00c4 21       		.byte	0x21
+ 551 00c5 EE000000 		.4byte	0xee
+ 552 00c9 08       		.byte	0x8
+ 553 00ca 06       		.uleb128 0x6
+ 554 00cb 6A000000 		.4byte	.LASF17
+ 555 00cf 01       		.byte	0x1
+ 556 00d0 22       		.byte	0x22
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 14
 
 
- 565 0246 00000000 		.4byte	.LFB34
- 566 024a 70000000 		.4byte	.LFE34-.LFB34
- 567 024e 01       		.uleb128 0x1
- 568 024f 9C       		.byte	0x9c
- 569 0250 CA020000 		.4byte	0x2ca
- 570 0254 14       		.uleb128 0x14
- 571 0255 6D6300   		.ascii	"mc\000"
- 572 0258 02       		.byte	0x2
- 573 0259 14       		.byte	0x14
- 574 025a 9A000000 		.4byte	0x9a
- 575 025e 02       		.uleb128 0x2
- 576 025f 91       		.byte	0x91
- 577 0260 64       		.sleb128 -28
- 578 0261 15       		.uleb128 0x15
- 579 0262 1C000000 		.4byte	.LVL16
- 580 0266 CA020000 		.4byte	0x2ca
- 581 026a 74020000 		.4byte	0x274
- 582 026e 11       		.uleb128 0x11
- 583 026f 01       		.uleb128 0x1
- 584 0270 50       		.byte	0x50
- 585 0271 01       		.uleb128 0x1
- 586 0272 31       		.byte	0x31
- 587 0273 00       		.byte	0
- 588 0274 15       		.uleb128 0x15
- 589 0275 32000000 		.4byte	.LVL17
- 590 0279 F4000000 		.4byte	0xf4
- 591 027d 89020000 		.4byte	0x289
- 592 0281 11       		.uleb128 0x11
- 593 0282 02       		.uleb128 0x2
- 594 0283 7D       		.byte	0x7d
- 595 0284 04       		.sleb128 4
- 596 0285 02       		.uleb128 0x2
- 597 0286 09       		.byte	0x9
- 598 0287 FF       		.byte	0xff
- 599 0288 00       		.byte	0
- 600 0289 15       		.uleb128 0x15
- 601 028a 3A000000 		.4byte	.LVL18
- 602 028e D5020000 		.4byte	0x2d5
- 603 0292 9D020000 		.4byte	0x29d
- 604 0296 11       		.uleb128 0x11
- 605 0297 01       		.uleb128 0x1
- 606 0298 50       		.byte	0x50
- 607 0299 02       		.uleb128 0x2
- 608 029a 74       		.byte	0x74
- 609 029b 00       		.sleb128 0
- 610 029c 00       		.byte	0
- 611 029d 15       		.uleb128 0x15
- 612 029e 40000000 		.4byte	.LVL19
- 613 02a2 CA020000 		.4byte	0x2ca
- 614 02a6 B0020000 		.4byte	0x2b0
- 615 02aa 11       		.uleb128 0x11
- 616 02ab 01       		.uleb128 0x1
- 617 02ac 50       		.byte	0x50
- 618 02ad 01       		.uleb128 0x1
- 619 02ae 30       		.byte	0x30
- 620 02af 00       		.byte	0
- 621 02b0 16       		.uleb128 0x16
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 14
+ 557 00d1 EE000000 		.4byte	0xee
+ 558 00d5 0C       		.byte	0xc
+ 559 00d6 06       		.uleb128 0x6
+ 560 00d7 98000000 		.4byte	.LASF18
+ 561 00db 01       		.byte	0x1
+ 562 00dc 26       		.byte	0x26
+ 563 00dd 5D000000 		.4byte	0x5d
+ 564 00e1 10       		.byte	0x10
+ 565 00e2 00       		.byte	0
+ 566 00e3 07       		.uleb128 0x7
+ 567 00e4 EE000000 		.4byte	0xee
+ 568 00e8 08       		.uleb128 0x8
+ 569 00e9 6B000000 		.4byte	0x6b
+ 570 00ed 00       		.byte	0
+ 571 00ee 09       		.uleb128 0x9
+ 572 00ef 04       		.byte	0x4
+ 573 00f0 E3000000 		.4byte	0xe3
+ 574 00f4 0A       		.uleb128 0xa
+ 575 00f5 7D000000 		.4byte	.LASF20
+ 576 00f9 01       		.byte	0x1
+ 577 00fa 29       		.byte	0x29
+ 578 00fb 00000000 		.4byte	.LFB32
+ 579 00ff 2C000000 		.4byte	.LFE32-.LFB32
+ 580 0103 01       		.uleb128 0x1
+ 581 0104 9C       		.byte	0x9c
+ 582 0105 33010000 		.4byte	0x133
+ 583 0109 0B       		.uleb128 0xb
+ 584 010a 6D6300   		.ascii	"mc\000"
+ 585 010d 01       		.byte	0x1
+ 586 010e 29       		.byte	0x29
+ 587 010f 9A000000 		.4byte	0x9a
+ 588 0113 02       		.uleb128 0x2
+ 589 0114 91       		.byte	0x91
+ 590 0115 70       		.sleb128 -16
+ 591 0116 0C       		.uleb128 0xc
+ 592 0117 A2010000 		.4byte	.LASF19
+ 593 011b 01       		.byte	0x1
+ 594 011c 29       		.byte	0x29
+ 595 011d 33010000 		.4byte	0x133
+ 596 0121 02       		.uleb128 0x2
+ 597 0122 91       		.byte	0x91
+ 598 0123 04       		.sleb128 4
+ 599 0124 0B       		.uleb128 0xb
+ 600 0125 64697200 		.ascii	"dir\000"
+ 601 0129 01       		.byte	0x1
+ 602 012a 29       		.byte	0x29
+ 603 012b 33010000 		.4byte	0x133
+ 604 012f 02       		.uleb128 0x2
+ 605 0130 91       		.byte	0x91
+ 606 0131 08       		.sleb128 8
+ 607 0132 00       		.byte	0
+ 608 0133 09       		.uleb128 0x9
+ 609 0134 04       		.byte	0x4
+ 610 0135 6B000000 		.4byte	0x6b
+ 611 0139 0A       		.uleb128 0xa
+ 612 013a 26000000 		.4byte	.LASF21
+ 613 013e 01       		.byte	0x1
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 15
 
 
- 622 02b1 52000000 		.4byte	.LVL20
- 623 02b5 D0010000 		.4byte	0x1d0
- 624 02b9 17       		.uleb128 0x17
- 625 02ba 58000000 		.4byte	.LVL21
- 626 02be D5020000 		.4byte	0x2d5
- 627 02c2 11       		.uleb128 0x11
- 628 02c3 01       		.uleb128 0x1
- 629 02c4 50       		.byte	0x50
- 630 02c5 02       		.uleb128 0x2
- 631 02c6 74       		.byte	0x74
- 632 02c7 00       		.sleb128 0
- 633 02c8 00       		.byte	0
- 634 02c9 00       		.byte	0
- 635 02ca 18       		.uleb128 0x18
- 636 02cb 6A000000 		.4byte	.LASF23
- 637 02cf 6A000000 		.4byte	.LASF23
- 638 02d3 03       		.byte	0x3
- 639 02d4 33       		.byte	0x33
- 640 02d5 18       		.uleb128 0x18
- 641 02d6 2A000000 		.4byte	.LASF24
- 642 02da 2A000000 		.4byte	.LASF24
- 643 02de 04       		.byte	0x4
- 644 02df EC       		.byte	0xec
- 645 02e0 00       		.byte	0
- 646              		.section	.debug_abbrev,"",%progbits
- 647              	.Ldebug_abbrev0:
- 648 0000 01       		.uleb128 0x1
- 649 0001 11       		.uleb128 0x11
- 650 0002 01       		.byte	0x1
- 651 0003 25       		.uleb128 0x25
- 652 0004 0E       		.uleb128 0xe
- 653 0005 13       		.uleb128 0x13
- 654 0006 0B       		.uleb128 0xb
- 655 0007 03       		.uleb128 0x3
- 656 0008 0E       		.uleb128 0xe
- 657 0009 1B       		.uleb128 0x1b
- 658 000a 0E       		.uleb128 0xe
- 659 000b 55       		.uleb128 0x55
- 660 000c 17       		.uleb128 0x17
- 661 000d 11       		.uleb128 0x11
- 662 000e 01       		.uleb128 0x1
- 663 000f 10       		.uleb128 0x10
- 664 0010 17       		.uleb128 0x17
- 665 0011 00       		.byte	0
- 666 0012 00       		.byte	0
- 667 0013 02       		.uleb128 0x2
- 668 0014 24       		.uleb128 0x24
- 669 0015 00       		.byte	0
- 670 0016 0B       		.uleb128 0xb
- 671 0017 0B       		.uleb128 0xb
- 672 0018 3E       		.uleb128 0x3e
- 673 0019 0B       		.uleb128 0xb
- 674 001a 03       		.uleb128 0x3
- 675 001b 0E       		.uleb128 0xe
- 676 001c 00       		.byte	0
- 677 001d 00       		.byte	0
- 678 001e 03       		.uleb128 0x3
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 15
+ 614 013f 42       		.byte	0x42
+ 615 0140 00000000 		.4byte	.LFB33
+ 616 0144 6E000000 		.4byte	.LFE33-.LFB33
+ 617 0148 01       		.uleb128 0x1
+ 618 0149 9C       		.byte	0x9c
+ 619 014a F0010000 		.4byte	0x1f0
+ 620 014e 0B       		.uleb128 0xb
+ 621 014f 6D6300   		.ascii	"mc\000"
+ 622 0152 01       		.byte	0x1
+ 623 0153 42       		.byte	0x42
+ 624 0154 9A000000 		.4byte	0x9a
+ 625 0158 02       		.uleb128 0x2
+ 626 0159 91       		.byte	0x91
+ 627 015a 70       		.sleb128 -16
+ 628 015b 0C       		.uleb128 0xc
+ 629 015c 8A000000 		.4byte	.LASF22
+ 630 0160 01       		.byte	0x1
+ 631 0161 42       		.byte	0x42
+ 632 0162 6B000000 		.4byte	0x6b
+ 633 0166 02       		.uleb128 0x2
+ 634 0167 91       		.byte	0x91
+ 635 0168 04       		.sleb128 4
+ 636 0169 0C       		.uleb128 0xc
+ 637 016a 91000000 		.4byte	.LASF23
+ 638 016e 01       		.byte	0x1
+ 639 016f 42       		.byte	0x42
+ 640 0170 6B000000 		.4byte	0x6b
+ 641 0174 02       		.uleb128 0x2
+ 642 0175 91       		.byte	0x91
+ 643 0176 08       		.sleb128 8
+ 644 0177 0D       		.uleb128 0xd
+ 645 0178 C6010000 		.4byte	.LASF24
+ 646 017c 01       		.byte	0x1
+ 647 017d 43       		.byte	0x43
+ 648 017e 6B000000 		.4byte	0x6b
+ 649 0182 02       		.uleb128 0x2
+ 650 0183 91       		.byte	0x91
+ 651 0184 57       		.sleb128 -41
+ 652 0185 0D       		.uleb128 0xd
+ 653 0186 CB010000 		.4byte	.LASF25
+ 654 018a 01       		.byte	0x1
+ 655 018b 43       		.byte	0x43
+ 656 018c 6B000000 		.4byte	0x6b
+ 657 0190 02       		.uleb128 0x2
+ 658 0191 91       		.byte	0x91
+ 659 0192 56       		.sleb128 -42
+ 660 0193 0E       		.uleb128 0xe
+ 661 0194 2E000000 		.4byte	.LVL7
+ 662 0198 F4000000 		.4byte	0xf4
+ 663 019c AF010000 		.4byte	0x1af
+ 664 01a0 0F       		.uleb128 0xf
+ 665 01a1 02       		.uleb128 0x2
+ 666 01a2 7D       		.byte	0x7d
+ 667 01a3 04       		.sleb128 4
+ 668 01a4 02       		.uleb128 0x2
+ 669 01a5 74       		.byte	0x74
+ 670 01a6 00       		.sleb128 0
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 16
 
 
- 679 001f 24       		.uleb128 0x24
- 680 0020 00       		.byte	0
- 681 0021 0B       		.uleb128 0xb
- 682 0022 0B       		.uleb128 0xb
- 683 0023 3E       		.uleb128 0x3e
- 684 0024 0B       		.uleb128 0xb
- 685 0025 03       		.uleb128 0x3
- 686 0026 08       		.uleb128 0x8
- 687 0027 00       		.byte	0
- 688 0028 00       		.byte	0
- 689 0029 04       		.uleb128 0x4
- 690 002a 16       		.uleb128 0x16
- 691 002b 00       		.byte	0
- 692 002c 03       		.uleb128 0x3
- 693 002d 0E       		.uleb128 0xe
- 694 002e 3A       		.uleb128 0x3a
- 695 002f 0B       		.uleb128 0xb
- 696 0030 3B       		.uleb128 0x3b
- 697 0031 05       		.uleb128 0x5
- 698 0032 49       		.uleb128 0x49
- 699 0033 13       		.uleb128 0x13
- 700 0034 00       		.byte	0
- 701 0035 00       		.byte	0
- 702 0036 05       		.uleb128 0x5
- 703 0037 13       		.uleb128 0x13
- 704 0038 01       		.byte	0x1
- 705 0039 03       		.uleb128 0x3
- 706 003a 0E       		.uleb128 0xe
- 707 003b 0B       		.uleb128 0xb
- 708 003c 0B       		.uleb128 0xb
- 709 003d 3A       		.uleb128 0x3a
- 710 003e 0B       		.uleb128 0xb
- 711 003f 3B       		.uleb128 0x3b
- 712 0040 0B       		.uleb128 0xb
- 713 0041 01       		.uleb128 0x1
- 714 0042 13       		.uleb128 0x13
- 715 0043 00       		.byte	0
- 716 0044 00       		.byte	0
- 717 0045 06       		.uleb128 0x6
- 718 0046 0D       		.uleb128 0xd
- 719 0047 00       		.byte	0
- 720 0048 03       		.uleb128 0x3
- 721 0049 0E       		.uleb128 0xe
- 722 004a 3A       		.uleb128 0x3a
- 723 004b 0B       		.uleb128 0xb
- 724 004c 3B       		.uleb128 0x3b
- 725 004d 0B       		.uleb128 0xb
- 726 004e 49       		.uleb128 0x49
- 727 004f 13       		.uleb128 0x13
- 728 0050 38       		.uleb128 0x38
- 729 0051 0B       		.uleb128 0xb
- 730 0052 00       		.byte	0
- 731 0053 00       		.byte	0
- 732 0054 07       		.uleb128 0x7
- 733 0055 15       		.uleb128 0x15
- 734 0056 01       		.byte	0x1
- 735 0057 27       		.uleb128 0x27
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 16
+ 671 01a7 0F       		.uleb128 0xf
+ 672 01a8 02       		.uleb128 0x2
+ 673 01a9 7D       		.byte	0x7d
+ 674 01aa 08       		.sleb128 8
+ 675 01ab 02       		.uleb128 0x2
+ 676 01ac 75       		.byte	0x75
+ 677 01ad 00       		.sleb128 0
+ 678 01ae 00       		.byte	0
+ 679 01af 0E       		.uleb128 0xe
+ 680 01b0 4C000000 		.4byte	.LVL8
+ 681 01b4 F4000000 		.4byte	0xf4
+ 682 01b8 CB010000 		.4byte	0x1cb
+ 683 01bc 0F       		.uleb128 0xf
+ 684 01bd 02       		.uleb128 0x2
+ 685 01be 7D       		.byte	0x7d
+ 686 01bf 04       		.sleb128 4
+ 687 01c0 02       		.uleb128 0x2
+ 688 01c1 76       		.byte	0x76
+ 689 01c2 00       		.sleb128 0
+ 690 01c3 0F       		.uleb128 0xf
+ 691 01c4 02       		.uleb128 0x2
+ 692 01c5 7D       		.byte	0x7d
+ 693 01c6 08       		.sleb128 8
+ 694 01c7 02       		.uleb128 0x2
+ 695 01c8 77       		.byte	0x77
+ 696 01c9 00       		.sleb128 0
+ 697 01ca 00       		.byte	0
+ 698 01cb 10       		.uleb128 0x10
+ 699 01cc 52000000 		.4byte	.LVL9
+ 700 01d0 03       		.uleb128 0x3
+ 701 01d1 91       		.byte	0x91
+ 702 01d2 58       		.sleb128 -40
+ 703 01d3 06       		.byte	0x6
+ 704 01d4 10       		.uleb128 0x10
+ 705 01d5 58000000 		.4byte	.LVL10
+ 706 01d9 03       		.uleb128 0x3
+ 707 01da 91       		.byte	0x91
+ 708 01db 5C       		.sleb128 -36
+ 709 01dc 06       		.byte	0x6
+ 710 01dd 10       		.uleb128 0x10
+ 711 01de 5E000000 		.4byte	.LVL11
+ 712 01e2 03       		.uleb128 0x3
+ 713 01e3 91       		.byte	0x91
+ 714 01e4 50       		.sleb128 -48
+ 715 01e5 06       		.byte	0x6
+ 716 01e6 10       		.uleb128 0x10
+ 717 01e7 64000000 		.4byte	.LVL12
+ 718 01eb 03       		.uleb128 0x3
+ 719 01ec 91       		.byte	0x91
+ 720 01ed 54       		.sleb128 -44
+ 721 01ee 06       		.byte	0x6
+ 722 01ef 00       		.byte	0
+ 723 01f0 0A       		.uleb128 0xa
+ 724 01f1 00000000 		.4byte	.LASF26
+ 725 01f5 01       		.byte	0x1
+ 726 01f6 50       		.byte	0x50
+ 727 01f7 00000000 		.4byte	.LFB34
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 17
 
 
- 736 0058 19       		.uleb128 0x19
- 737 0059 01       		.uleb128 0x1
- 738 005a 13       		.uleb128 0x13
- 739 005b 00       		.byte	0
- 740 005c 00       		.byte	0
- 741 005d 08       		.uleb128 0x8
- 742 005e 05       		.uleb128 0x5
- 743 005f 00       		.byte	0
- 744 0060 49       		.uleb128 0x49
- 745 0061 13       		.uleb128 0x13
- 746 0062 00       		.byte	0
- 747 0063 00       		.byte	0
- 748 0064 09       		.uleb128 0x9
- 749 0065 0F       		.uleb128 0xf
- 750 0066 00       		.byte	0
- 751 0067 0B       		.uleb128 0xb
- 752 0068 0B       		.uleb128 0xb
- 753 0069 49       		.uleb128 0x49
- 754 006a 13       		.uleb128 0x13
- 755 006b 00       		.byte	0
- 756 006c 00       		.byte	0
- 757 006d 0A       		.uleb128 0xa
- 758 006e 2E       		.uleb128 0x2e
- 759 006f 01       		.byte	0x1
- 760 0070 3F       		.uleb128 0x3f
- 761 0071 19       		.uleb128 0x19
- 762 0072 03       		.uleb128 0x3
- 763 0073 0E       		.uleb128 0xe
- 764 0074 3A       		.uleb128 0x3a
- 765 0075 0B       		.uleb128 0xb
- 766 0076 3B       		.uleb128 0x3b
- 767 0077 0B       		.uleb128 0xb
- 768 0078 27       		.uleb128 0x27
- 769 0079 19       		.uleb128 0x19
- 770 007a 11       		.uleb128 0x11
- 771 007b 01       		.uleb128 0x1
- 772 007c 12       		.uleb128 0x12
- 773 007d 06       		.uleb128 0x6
- 774 007e 40       		.uleb128 0x40
- 775 007f 18       		.uleb128 0x18
- 776 0080 9742     		.uleb128 0x2117
- 777 0082 19       		.uleb128 0x19
- 778 0083 01       		.uleb128 0x1
- 779 0084 13       		.uleb128 0x13
- 780 0085 00       		.byte	0
- 781 0086 00       		.byte	0
- 782 0087 0B       		.uleb128 0xb
- 783 0088 05       		.uleb128 0x5
- 784 0089 00       		.byte	0
- 785 008a 03       		.uleb128 0x3
- 786 008b 08       		.uleb128 0x8
- 787 008c 3A       		.uleb128 0x3a
- 788 008d 0B       		.uleb128 0xb
- 789 008e 3B       		.uleb128 0x3b
- 790 008f 0B       		.uleb128 0xb
- 791 0090 49       		.uleb128 0x49
- 792 0091 13       		.uleb128 0x13
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 17
+ 728 01fb 2A000000 		.4byte	.LFE34-.LFB34
+ 729 01ff 01       		.uleb128 0x1
+ 730 0200 9C       		.byte	0x9c
+ 731 0201 5B020000 		.4byte	0x25b
+ 732 0205 0B       		.uleb128 0xb
+ 733 0206 6D6300   		.ascii	"mc\000"
+ 734 0209 01       		.byte	0x1
+ 735 020a 50       		.byte	0x50
+ 736 020b 9A000000 		.4byte	0x9a
+ 737 020f 02       		.uleb128 0x2
+ 738 0210 91       		.byte	0x91
+ 739 0211 70       		.sleb128 -16
+ 740 0212 11       		.uleb128 0x11
+ 741 0213 10000000 		.4byte	.LVL13
+ 742 0217 03       		.uleb128 0x3
+ 743 0218 91       		.byte	0x91
+ 744 0219 58       		.sleb128 -40
+ 745 021a 06       		.byte	0x6
+ 746 021b 25020000 		.4byte	0x225
+ 747 021f 0F       		.uleb128 0xf
+ 748 0220 01       		.uleb128 0x1
+ 749 0221 50       		.byte	0x50
+ 750 0222 01       		.uleb128 0x1
+ 751 0223 31       		.byte	0x31
+ 752 0224 00       		.byte	0
+ 753 0225 11       		.uleb128 0x11
+ 754 0226 16000000 		.4byte	.LVL14
+ 755 022a 03       		.uleb128 0x3
+ 756 022b 91       		.byte	0x91
+ 757 022c 5C       		.sleb128 -36
+ 758 022d 06       		.byte	0x6
+ 759 022e 38020000 		.4byte	0x238
+ 760 0232 0F       		.uleb128 0xf
+ 761 0233 01       		.uleb128 0x1
+ 762 0234 50       		.byte	0x50
+ 763 0235 01       		.uleb128 0x1
+ 764 0236 31       		.byte	0x31
+ 765 0237 00       		.byte	0
+ 766 0238 11       		.uleb128 0x11
+ 767 0239 1C000000 		.4byte	.LVL15
+ 768 023d 03       		.uleb128 0x3
+ 769 023e 91       		.byte	0x91
+ 770 023f 50       		.sleb128 -48
+ 771 0240 06       		.byte	0x6
+ 772 0241 4B020000 		.4byte	0x24b
+ 773 0245 0F       		.uleb128 0xf
+ 774 0246 01       		.uleb128 0x1
+ 775 0247 50       		.byte	0x50
+ 776 0248 01       		.uleb128 0x1
+ 777 0249 31       		.byte	0x31
+ 778 024a 00       		.byte	0
+ 779 024b 12       		.uleb128 0x12
+ 780 024c 22000000 		.4byte	.LVL16
+ 781 0250 03       		.uleb128 0x3
+ 782 0251 91       		.byte	0x91
+ 783 0252 54       		.sleb128 -44
+ 784 0253 06       		.byte	0x6
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 18
 
 
- 793 0092 02       		.uleb128 0x2
- 794 0093 18       		.uleb128 0x18
- 795 0094 00       		.byte	0
- 796 0095 00       		.byte	0
- 797 0096 0C       		.uleb128 0xc
- 798 0097 05       		.uleb128 0x5
- 799 0098 00       		.byte	0
- 800 0099 03       		.uleb128 0x3
- 801 009a 0E       		.uleb128 0xe
- 802 009b 3A       		.uleb128 0x3a
- 803 009c 0B       		.uleb128 0xb
- 804 009d 3B       		.uleb128 0x3b
- 805 009e 0B       		.uleb128 0xb
- 806 009f 49       		.uleb128 0x49
- 807 00a0 13       		.uleb128 0x13
- 808 00a1 02       		.uleb128 0x2
- 809 00a2 17       		.uleb128 0x17
- 810 00a3 00       		.byte	0
- 811 00a4 00       		.byte	0
- 812 00a5 0D       		.uleb128 0xd
- 813 00a6 34       		.uleb128 0x34
- 814 00a7 00       		.byte	0
- 815 00a8 03       		.uleb128 0x3
- 816 00a9 0E       		.uleb128 0xe
- 817 00aa 3A       		.uleb128 0x3a
- 818 00ab 0B       		.uleb128 0xb
- 819 00ac 3B       		.uleb128 0x3b
- 820 00ad 0B       		.uleb128 0xb
- 821 00ae 49       		.uleb128 0x49
- 822 00af 13       		.uleb128 0x13
- 823 00b0 1C       		.uleb128 0x1c
- 824 00b1 0B       		.uleb128 0xb
- 825 00b2 00       		.byte	0
- 826 00b3 00       		.byte	0
- 827 00b4 0E       		.uleb128 0xe
- 828 00b5 0B       		.uleb128 0xb
- 829 00b6 01       		.byte	0x1
- 830 00b7 11       		.uleb128 0x11
- 831 00b8 01       		.uleb128 0x1
- 832 00b9 12       		.uleb128 0x12
- 833 00ba 06       		.uleb128 0x6
- 834 00bb 01       		.uleb128 0x1
- 835 00bc 13       		.uleb128 0x13
- 836 00bd 00       		.byte	0
- 837 00be 00       		.byte	0
- 838 00bf 0F       		.uleb128 0xf
- 839 00c0 34       		.uleb128 0x34
- 840 00c1 00       		.byte	0
- 841 00c2 03       		.uleb128 0x3
- 842 00c3 08       		.uleb128 0x8
- 843 00c4 3A       		.uleb128 0x3a
- 844 00c5 0B       		.uleb128 0xb
- 845 00c6 3B       		.uleb128 0x3b
- 846 00c7 0B       		.uleb128 0xb
- 847 00c8 49       		.uleb128 0x49
- 848 00c9 13       		.uleb128 0x13
- 849 00ca 02       		.uleb128 0x2
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 18
+ 785 0254 0F       		.uleb128 0xf
+ 786 0255 01       		.uleb128 0x1
+ 787 0256 50       		.byte	0x50
+ 788 0257 01       		.uleb128 0x1
+ 789 0258 31       		.byte	0x31
+ 790 0259 00       		.byte	0
+ 791 025a 00       		.byte	0
+ 792 025b 13       		.uleb128 0x13
+ 793 025c 85000000 		.4byte	.LASF34
+ 794 0260 02       		.byte	0x2
+ 795 0261 1B       		.byte	0x1b
+ 796 0262 5D000000 		.4byte	0x5d
+ 797 0266 00000000 		.4byte	.LFB35
+ 798 026a 34010000 		.4byte	.LFE35-.LFB35
+ 799 026e 01       		.uleb128 0x1
+ 800 026f 9C       		.byte	0x9c
+ 801 0270 FE020000 		.4byte	0x2fe
+ 802 0274 14       		.uleb128 0x14
+ 803 0275 6D6300   		.ascii	"mc\000"
+ 804 0278 02       		.byte	0x2
+ 805 0279 20       		.byte	0x20
+ 806 027a 9A000000 		.4byte	0x9a
+ 807 027e 02       		.uleb128 0x2
+ 808 027f 91       		.byte	0x91
+ 809 0280 64       		.sleb128 -28
+ 810 0281 0E       		.uleb128 0xe
+ 811 0282 1C000000 		.4byte	.LVL17
+ 812 0286 20030000 		.4byte	0x320
+ 813 028a 95020000 		.4byte	0x295
+ 814 028e 0F       		.uleb128 0xf
+ 815 028f 01       		.uleb128 0x1
+ 816 0290 50       		.byte	0x50
+ 817 0291 02       		.uleb128 0x2
+ 818 0292 08       		.byte	0x8
+ 819 0293 32       		.byte	0x32
+ 820 0294 00       		.byte	0
+ 821 0295 0E       		.uleb128 0xe
+ 822 0296 4A000000 		.4byte	.LVL18
+ 823 029a 39010000 		.4byte	0x139
+ 824 029e AF020000 		.4byte	0x2af
+ 825 02a2 0F       		.uleb128 0xf
+ 826 02a3 02       		.uleb128 0x2
+ 827 02a4 7D       		.byte	0x7d
+ 828 02a5 04       		.sleb128 4
+ 829 02a6 01       		.uleb128 0x1
+ 830 02a7 30       		.byte	0x30
+ 831 02a8 0F       		.uleb128 0xf
+ 832 02a9 02       		.uleb128 0x2
+ 833 02aa 7D       		.byte	0x7d
+ 834 02ab 08       		.sleb128 8
+ 835 02ac 01       		.uleb128 0x1
+ 836 02ad 30       		.byte	0x30
+ 837 02ae 00       		.byte	0
+ 838 02af 0E       		.uleb128 0xe
+ 839 02b0 84000000 		.4byte	.LVL19
+ 840 02b4 39010000 		.4byte	0x139
+ 841 02b8 CB020000 		.4byte	0x2cb
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 19
 
 
- 850 00cb 17       		.uleb128 0x17
- 851 00cc 00       		.byte	0
- 852 00cd 00       		.byte	0
- 853 00ce 10       		.uleb128 0x10
- 854 00cf 898201   		.uleb128 0x4109
- 855 00d2 01       		.byte	0x1
- 856 00d3 11       		.uleb128 0x11
- 857 00d4 01       		.uleb128 0x1
- 858 00d5 9342     		.uleb128 0x2113
- 859 00d7 18       		.uleb128 0x18
- 860 00d8 01       		.uleb128 0x1
- 861 00d9 13       		.uleb128 0x13
- 862 00da 00       		.byte	0
- 863 00db 00       		.byte	0
- 864 00dc 11       		.uleb128 0x11
- 865 00dd 8A8201   		.uleb128 0x410a
- 866 00e0 00       		.byte	0
- 867 00e1 02       		.uleb128 0x2
- 868 00e2 18       		.uleb128 0x18
- 869 00e3 9142     		.uleb128 0x2111
- 870 00e5 18       		.uleb128 0x18
- 871 00e6 00       		.byte	0
- 872 00e7 00       		.byte	0
- 873 00e8 12       		.uleb128 0x12
- 874 00e9 898201   		.uleb128 0x4109
- 875 00ec 01       		.byte	0x1
- 876 00ed 11       		.uleb128 0x11
- 877 00ee 01       		.uleb128 0x1
- 878 00ef 9342     		.uleb128 0x2113
- 879 00f1 18       		.uleb128 0x18
- 880 00f2 00       		.byte	0
- 881 00f3 00       		.byte	0
- 882 00f4 13       		.uleb128 0x13
- 883 00f5 2E       		.uleb128 0x2e
- 884 00f6 01       		.byte	0x1
- 885 00f7 3F       		.uleb128 0x3f
- 886 00f8 19       		.uleb128 0x19
- 887 00f9 03       		.uleb128 0x3
- 888 00fa 0E       		.uleb128 0xe
- 889 00fb 3A       		.uleb128 0x3a
- 890 00fc 0B       		.uleb128 0xb
- 891 00fd 3B       		.uleb128 0x3b
- 892 00fe 0B       		.uleb128 0xb
- 893 00ff 27       		.uleb128 0x27
- 894 0100 19       		.uleb128 0x19
- 895 0101 49       		.uleb128 0x49
- 896 0102 13       		.uleb128 0x13
- 897 0103 8701     		.uleb128 0x87
- 898 0105 19       		.uleb128 0x19
- 899 0106 11       		.uleb128 0x11
- 900 0107 01       		.uleb128 0x1
- 901 0108 12       		.uleb128 0x12
- 902 0109 06       		.uleb128 0x6
- 903 010a 40       		.uleb128 0x40
- 904 010b 18       		.uleb128 0x18
- 905 010c 9742     		.uleb128 0x2117
- 906 010e 19       		.uleb128 0x19
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 19
+ 842 02bc 0F       		.uleb128 0xf
+ 843 02bd 02       		.uleb128 0x2
+ 844 02be 7D       		.byte	0x7d
+ 845 02bf 04       		.sleb128 4
+ 846 02c0 02       		.uleb128 0x2
+ 847 02c1 09       		.byte	0x9
+ 848 02c2 FF       		.byte	0xff
+ 849 02c3 0F       		.uleb128 0xf
+ 850 02c4 02       		.uleb128 0x2
+ 851 02c5 7D       		.byte	0x7d
+ 852 02c6 08       		.sleb128 8
+ 853 02c7 02       		.uleb128 0x2
+ 854 02c8 09       		.byte	0x9
+ 855 02c9 FF       		.byte	0xff
+ 856 02ca 00       		.byte	0
+ 857 02cb 0E       		.uleb128 0xe
+ 858 02cc C0000000 		.4byte	.LVL20
+ 859 02d0 39010000 		.4byte	0x139
+ 860 02d4 E6020000 		.4byte	0x2e6
+ 861 02d8 0F       		.uleb128 0xf
+ 862 02d9 02       		.uleb128 0x2
+ 863 02da 7D       		.byte	0x7d
+ 864 02db 04       		.sleb128 4
+ 865 02dc 02       		.uleb128 0x2
+ 866 02dd 09       		.byte	0x9
+ 867 02de FF       		.byte	0xff
+ 868 02df 0F       		.uleb128 0xf
+ 869 02e0 02       		.uleb128 0x2
+ 870 02e1 7D       		.byte	0x7d
+ 871 02e2 08       		.sleb128 8
+ 872 02e3 01       		.uleb128 0x1
+ 873 02e4 30       		.byte	0x30
+ 874 02e5 00       		.byte	0
+ 875 02e6 15       		.uleb128 0x15
+ 876 02e7 FC000000 		.4byte	.LVL21
+ 877 02eb 39010000 		.4byte	0x139
+ 878 02ef 0F       		.uleb128 0xf
+ 879 02f0 02       		.uleb128 0x2
+ 880 02f1 7D       		.byte	0x7d
+ 881 02f2 04       		.sleb128 4
+ 882 02f3 01       		.uleb128 0x1
+ 883 02f4 30       		.byte	0x30
+ 884 02f5 0F       		.uleb128 0xf
+ 885 02f6 02       		.uleb128 0x2
+ 886 02f7 7D       		.byte	0x7d
+ 887 02f8 08       		.sleb128 8
+ 888 02f9 02       		.uleb128 0x2
+ 889 02fa 09       		.byte	0x9
+ 890 02fb FF       		.byte	0xff
+ 891 02fc 00       		.byte	0
+ 892 02fd 00       		.byte	0
+ 893 02fe 16       		.uleb128 0x16
+ 894 02ff 17000000 		.4byte	.LASF27
+ 895 0303 02       		.byte	0x2
+ 896 0304 18       		.byte	0x18
+ 897 0305 6B000000 		.4byte	0x6b
+ 898 0309 05       		.uleb128 0x5
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 20
 
 
- 907 010f 01       		.uleb128 0x1
- 908 0110 13       		.uleb128 0x13
- 909 0111 00       		.byte	0
- 910 0112 00       		.byte	0
- 911 0113 14       		.uleb128 0x14
- 912 0114 34       		.uleb128 0x34
- 913 0115 00       		.byte	0
- 914 0116 03       		.uleb128 0x3
- 915 0117 08       		.uleb128 0x8
- 916 0118 3A       		.uleb128 0x3a
- 917 0119 0B       		.uleb128 0xb
- 918 011a 3B       		.uleb128 0x3b
- 919 011b 0B       		.uleb128 0xb
- 920 011c 49       		.uleb128 0x49
- 921 011d 13       		.uleb128 0x13
- 922 011e 02       		.uleb128 0x2
- 923 011f 18       		.uleb128 0x18
- 924 0120 00       		.byte	0
- 925 0121 00       		.byte	0
- 926 0122 15       		.uleb128 0x15
- 927 0123 898201   		.uleb128 0x4109
- 928 0126 01       		.byte	0x1
- 929 0127 11       		.uleb128 0x11
- 930 0128 01       		.uleb128 0x1
- 931 0129 31       		.uleb128 0x31
- 932 012a 13       		.uleb128 0x13
- 933 012b 01       		.uleb128 0x1
- 934 012c 13       		.uleb128 0x13
- 935 012d 00       		.byte	0
- 936 012e 00       		.byte	0
- 937 012f 16       		.uleb128 0x16
- 938 0130 898201   		.uleb128 0x4109
- 939 0133 00       		.byte	0
- 940 0134 11       		.uleb128 0x11
- 941 0135 01       		.uleb128 0x1
- 942 0136 31       		.uleb128 0x31
- 943 0137 13       		.uleb128 0x13
- 944 0138 00       		.byte	0
- 945 0139 00       		.byte	0
- 946 013a 17       		.uleb128 0x17
- 947 013b 898201   		.uleb128 0x4109
- 948 013e 01       		.byte	0x1
- 949 013f 11       		.uleb128 0x11
- 950 0140 01       		.uleb128 0x1
- 951 0141 31       		.uleb128 0x31
- 952 0142 13       		.uleb128 0x13
- 953 0143 00       		.byte	0
- 954 0144 00       		.byte	0
- 955 0145 18       		.uleb128 0x18
- 956 0146 2E       		.uleb128 0x2e
- 957 0147 00       		.byte	0
- 958 0148 3F       		.uleb128 0x3f
- 959 0149 19       		.uleb128 0x19
- 960 014a 3C       		.uleb128 0x3c
- 961 014b 19       		.uleb128 0x19
- 962 014c 6E       		.uleb128 0x6e
- 963 014d 0E       		.uleb128 0xe
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 20
+ 899 030a 03       		.byte	0x3
+ 900 030b 00000000 		.4byte	state
+ 901 030f 16       		.uleb128 0x16
+ 902 0310 1D000000 		.4byte	.LASF28
+ 903 0314 02       		.byte	0x2
+ 904 0315 19       		.byte	0x19
+ 905 0316 5D000000 		.4byte	0x5d
+ 906 031a 05       		.uleb128 0x5
+ 907 031b 03       		.byte	0x3
+ 908 031c 00000000 		.4byte	move_cnt
+ 909 0320 17       		.uleb128 0x17
+ 910 0321 1C020000 		.4byte	.LASF35
+ 911 0325 1C020000 		.4byte	.LASF35
+ 912 0329 04       		.byte	0x4
+ 913 032a EC       		.byte	0xec
+ 914 032b 00       		.byte	0
+ 915              		.section	.debug_abbrev,"",%progbits
+ 916              	.Ldebug_abbrev0:
+ 917 0000 01       		.uleb128 0x1
+ 918 0001 11       		.uleb128 0x11
+ 919 0002 01       		.byte	0x1
+ 920 0003 25       		.uleb128 0x25
+ 921 0004 0E       		.uleb128 0xe
+ 922 0005 13       		.uleb128 0x13
+ 923 0006 0B       		.uleb128 0xb
+ 924 0007 03       		.uleb128 0x3
+ 925 0008 0E       		.uleb128 0xe
+ 926 0009 1B       		.uleb128 0x1b
+ 927 000a 0E       		.uleb128 0xe
+ 928 000b 55       		.uleb128 0x55
+ 929 000c 17       		.uleb128 0x17
+ 930 000d 11       		.uleb128 0x11
+ 931 000e 01       		.uleb128 0x1
+ 932 000f 10       		.uleb128 0x10
+ 933 0010 17       		.uleb128 0x17
+ 934 0011 00       		.byte	0
+ 935 0012 00       		.byte	0
+ 936 0013 02       		.uleb128 0x2
+ 937 0014 24       		.uleb128 0x24
+ 938 0015 00       		.byte	0
+ 939 0016 0B       		.uleb128 0xb
+ 940 0017 0B       		.uleb128 0xb
+ 941 0018 3E       		.uleb128 0x3e
+ 942 0019 0B       		.uleb128 0xb
+ 943 001a 03       		.uleb128 0x3
+ 944 001b 0E       		.uleb128 0xe
+ 945 001c 00       		.byte	0
+ 946 001d 00       		.byte	0
+ 947 001e 03       		.uleb128 0x3
+ 948 001f 24       		.uleb128 0x24
+ 949 0020 00       		.byte	0
+ 950 0021 0B       		.uleb128 0xb
+ 951 0022 0B       		.uleb128 0xb
+ 952 0023 3E       		.uleb128 0x3e
+ 953 0024 0B       		.uleb128 0xb
+ 954 0025 03       		.uleb128 0x3
+ 955 0026 08       		.uleb128 0x8
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 21
 
 
- 964 014e 03       		.uleb128 0x3
- 965 014f 0E       		.uleb128 0xe
- 966 0150 3A       		.uleb128 0x3a
- 967 0151 0B       		.uleb128 0xb
- 968 0152 3B       		.uleb128 0x3b
- 969 0153 0B       		.uleb128 0xb
- 970 0154 00       		.byte	0
- 971 0155 00       		.byte	0
- 972 0156 00       		.byte	0
- 973              		.section	.debug_loc,"",%progbits
- 974              	.Ldebug_loc0:
- 975              	.LLST0:
- 976 0000 00000000 		.4byte	.LVL0
- 977 0004 1C000000 		.4byte	.LVL3
- 978 0008 0200     		.2byte	0x2
- 979 000a 91       		.byte	0x91
- 980 000b 04       		.sleb128 4
- 981 000c 1C000000 		.4byte	.LVL3
- 982 0010 22000000 		.4byte	.LVL4
- 983 0014 0100     		.2byte	0x1
- 984 0016 54       		.byte	0x54
- 985 0017 24000000 		.4byte	.LVL5
- 986 001b 28000000 		.4byte	.LVL6
- 987 001f 0100     		.2byte	0x1
- 988 0021 54       		.byte	0x54
- 989 0022 28000000 		.4byte	.LVL6
- 990 0026 2A000000 		.4byte	.LVL7
- 991 002a 0200     		.2byte	0x2
- 992 002c 30       		.byte	0x30
- 993 002d 9F       		.byte	0x9f
- 994 002e 00000000 		.4byte	0
- 995 0032 00000000 		.4byte	0
- 996              	.LLST1:
- 997 0036 16000000 		.4byte	.LVL2
- 998 003a 1C000000 		.4byte	.LVL3
- 999 003e 0100     		.2byte	0x1
- 1000 0040 54       		.byte	0x54
- 1001 0041 1C000000 		.4byte	.LVL3
- 1002 0045 22000000 		.4byte	.LVL4
- 1003 0049 0200     		.2byte	0x2
- 1004 004b 91       		.byte	0x91
- 1005 004c 64       		.sleb128 -28
- 1006 004d 22000000 		.4byte	.LVL4
- 1007 0051 28000000 		.4byte	.LVL6
- 1008 0055 0100     		.2byte	0x1
- 1009 0057 54       		.byte	0x54
- 1010 0058 28000000 		.4byte	.LVL6
- 1011 005c 2A000000 		.4byte	.LVL7
- 1012 0060 0200     		.2byte	0x2
- 1013 0062 30       		.byte	0x30
- 1014 0063 9F       		.byte	0x9f
- 1015 0064 00000000 		.4byte	0
- 1016 0068 00000000 		.4byte	0
- 1017              	.LLST2:
- 1018 006c 16000000 		.4byte	.LVL2
- 1019 0070 2A000000 		.4byte	.LVL7
- 1020 0074 0200     		.2byte	0x2
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 21
+ 956 0027 00       		.byte	0
+ 957 0028 00       		.byte	0
+ 958 0029 04       		.uleb128 0x4
+ 959 002a 16       		.uleb128 0x16
+ 960 002b 00       		.byte	0
+ 961 002c 03       		.uleb128 0x3
+ 962 002d 0E       		.uleb128 0xe
+ 963 002e 3A       		.uleb128 0x3a
+ 964 002f 0B       		.uleb128 0xb
+ 965 0030 3B       		.uleb128 0x3b
+ 966 0031 05       		.uleb128 0x5
+ 967 0032 49       		.uleb128 0x49
+ 968 0033 13       		.uleb128 0x13
+ 969 0034 00       		.byte	0
+ 970 0035 00       		.byte	0
+ 971 0036 05       		.uleb128 0x5
+ 972 0037 13       		.uleb128 0x13
+ 973 0038 01       		.byte	0x1
+ 974 0039 03       		.uleb128 0x3
+ 975 003a 0E       		.uleb128 0xe
+ 976 003b 0B       		.uleb128 0xb
+ 977 003c 0B       		.uleb128 0xb
+ 978 003d 3A       		.uleb128 0x3a
+ 979 003e 0B       		.uleb128 0xb
+ 980 003f 3B       		.uleb128 0x3b
+ 981 0040 0B       		.uleb128 0xb
+ 982 0041 01       		.uleb128 0x1
+ 983 0042 13       		.uleb128 0x13
+ 984 0043 00       		.byte	0
+ 985 0044 00       		.byte	0
+ 986 0045 06       		.uleb128 0x6
+ 987 0046 0D       		.uleb128 0xd
+ 988 0047 00       		.byte	0
+ 989 0048 03       		.uleb128 0x3
+ 990 0049 0E       		.uleb128 0xe
+ 991 004a 3A       		.uleb128 0x3a
+ 992 004b 0B       		.uleb128 0xb
+ 993 004c 3B       		.uleb128 0x3b
+ 994 004d 0B       		.uleb128 0xb
+ 995 004e 49       		.uleb128 0x49
+ 996 004f 13       		.uleb128 0x13
+ 997 0050 38       		.uleb128 0x38
+ 998 0051 0B       		.uleb128 0xb
+ 999 0052 00       		.byte	0
+ 1000 0053 00       		.byte	0
+ 1001 0054 07       		.uleb128 0x7
+ 1002 0055 15       		.uleb128 0x15
+ 1003 0056 01       		.byte	0x1
+ 1004 0057 27       		.uleb128 0x27
+ 1005 0058 19       		.uleb128 0x19
+ 1006 0059 01       		.uleb128 0x1
+ 1007 005a 13       		.uleb128 0x13
+ 1008 005b 00       		.byte	0
+ 1009 005c 00       		.byte	0
+ 1010 005d 08       		.uleb128 0x8
+ 1011 005e 05       		.uleb128 0x5
+ 1012 005f 00       		.byte	0
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 22
 
 
- 1021 0076 30       		.byte	0x30
- 1022 0077 9F       		.byte	0x9f
- 1023 0078 00000000 		.4byte	0
- 1024 007c 00000000 		.4byte	0
- 1025              	.LLST3:
- 1026 0080 1C000000 		.4byte	.LVL3
- 1027 0084 22000000 		.4byte	.LVL4
- 1028 0088 0100     		.2byte	0x1
- 1029 008a 54       		.byte	0x54
- 1030 008b 00000000 		.4byte	0
- 1031 008f 00000000 		.4byte	0
- 1032              	.LLST4:
- 1033 0093 1C000000 		.4byte	.LVL3
- 1034 0097 2A000000 		.4byte	.LVL7
- 1035 009b 0300     		.2byte	0x3
- 1036 009d 08       		.byte	0x8
- 1037 009e FF       		.byte	0xff
- 1038 009f 9F       		.byte	0x9f
- 1039 00a0 00000000 		.4byte	0
- 1040 00a4 00000000 		.4byte	0
- 1041              		.section	.debug_aranges,"",%progbits
- 1042 0000 2C000000 		.4byte	0x2c
- 1043 0004 0200     		.2byte	0x2
- 1044 0006 00000000 		.4byte	.Ldebug_info0
- 1045 000a 04       		.byte	0x4
- 1046 000b 00       		.byte	0
- 1047 000c 0000     		.2byte	0
- 1048 000e 0000     		.2byte	0
- 1049 0010 00000000 		.4byte	.LFB32
- 1050 0014 4A000000 		.4byte	.LFE32-.LFB32
- 1051 0018 00000000 		.4byte	.LFB33
- 1052 001c 2A000000 		.4byte	.LFE33-.LFB33
- 1053 0020 00000000 		.4byte	.LFB34
- 1054 0024 70000000 		.4byte	.LFE34-.LFB34
- 1055 0028 00000000 		.4byte	0
- 1056 002c 00000000 		.4byte	0
- 1057              		.section	.debug_ranges,"",%progbits
- 1058              	.Ldebug_ranges0:
- 1059 0000 00000000 		.4byte	.LFB32
- 1060 0004 4A000000 		.4byte	.LFE32
- 1061 0008 00000000 		.4byte	.LFB33
- 1062 000c 2A000000 		.4byte	.LFE33
- 1063 0010 00000000 		.4byte	.LFB34
- 1064 0014 70000000 		.4byte	.LFE34
- 1065 0018 00000000 		.4byte	0
- 1066 001c 00000000 		.4byte	0
- 1067              		.section	.debug_line,"",%progbits
- 1068              	.Ldebug_line0:
- 1069 0000 CF000000 		.section	.debug_str,"MS",%progbits,1
- 1069      02006600 
- 1069      00000201 
- 1069      FB0E0D00 
- 1069      01010101 
- 1070              	.LASF22:
- 1071 0000 73746F70 		.ascii	"stopMoving\000"
- 1071      4D6F7669 
- 1071      6E6700
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 22
+ 1013 0060 49       		.uleb128 0x49
+ 1014 0061 13       		.uleb128 0x13
+ 1015 0062 00       		.byte	0
+ 1016 0063 00       		.byte	0
+ 1017 0064 09       		.uleb128 0x9
+ 1018 0065 0F       		.uleb128 0xf
+ 1019 0066 00       		.byte	0
+ 1020 0067 0B       		.uleb128 0xb
+ 1021 0068 0B       		.uleb128 0xb
+ 1022 0069 49       		.uleb128 0x49
+ 1023 006a 13       		.uleb128 0x13
+ 1024 006b 00       		.byte	0
+ 1025 006c 00       		.byte	0
+ 1026 006d 0A       		.uleb128 0xa
+ 1027 006e 2E       		.uleb128 0x2e
+ 1028 006f 01       		.byte	0x1
+ 1029 0070 3F       		.uleb128 0x3f
+ 1030 0071 19       		.uleb128 0x19
+ 1031 0072 03       		.uleb128 0x3
+ 1032 0073 0E       		.uleb128 0xe
+ 1033 0074 3A       		.uleb128 0x3a
+ 1034 0075 0B       		.uleb128 0xb
+ 1035 0076 3B       		.uleb128 0x3b
+ 1036 0077 0B       		.uleb128 0xb
+ 1037 0078 27       		.uleb128 0x27
+ 1038 0079 19       		.uleb128 0x19
+ 1039 007a 11       		.uleb128 0x11
+ 1040 007b 01       		.uleb128 0x1
+ 1041 007c 12       		.uleb128 0x12
+ 1042 007d 06       		.uleb128 0x6
+ 1043 007e 40       		.uleb128 0x40
+ 1044 007f 18       		.uleb128 0x18
+ 1045 0080 9742     		.uleb128 0x2117
+ 1046 0082 19       		.uleb128 0x19
+ 1047 0083 01       		.uleb128 0x1
+ 1048 0084 13       		.uleb128 0x13
+ 1049 0085 00       		.byte	0
+ 1050 0086 00       		.byte	0
+ 1051 0087 0B       		.uleb128 0xb
+ 1052 0088 05       		.uleb128 0x5
+ 1053 0089 00       		.byte	0
+ 1054 008a 03       		.uleb128 0x3
+ 1055 008b 08       		.uleb128 0x8
+ 1056 008c 3A       		.uleb128 0x3a
+ 1057 008d 0B       		.uleb128 0xb
+ 1058 008e 3B       		.uleb128 0x3b
+ 1059 008f 0B       		.uleb128 0xb
+ 1060 0090 49       		.uleb128 0x49
+ 1061 0091 13       		.uleb128 0x13
+ 1062 0092 02       		.uleb128 0x2
+ 1063 0093 18       		.uleb128 0x18
+ 1064 0094 00       		.byte	0
+ 1065 0095 00       		.byte	0
+ 1066 0096 0C       		.uleb128 0xc
+ 1067 0097 05       		.uleb128 0x5
+ 1068 0098 00       		.byte	0
+ 1069 0099 03       		.uleb128 0x3
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 23
 
 
- 1072              	.LASF15:
- 1073 000b 5F70776D 		.ascii	"_pwmR_Write\000"
- 1073      525F5772 
- 1073      69746500 
- 1074              	.LASF3:
- 1075 0017 73686F72 		.ascii	"short unsigned int\000"
- 1075      7420756E 
- 1075      7369676E 
- 1075      65642069 
- 1075      6E7400
- 1076              	.LASF24:
- 1077 002a 43794465 		.ascii	"CyDelay\000"
- 1077      6C617900 
- 1078              	.LASF9:
- 1079 0032 666C6F61 		.ascii	"float\000"
- 1079      7400
- 1080              	.LASF1:
- 1081 0038 756E7369 		.ascii	"unsigned char\000"
- 1081      676E6564 
- 1081      20636861 
- 1081      7200
- 1082              	.LASF5:
- 1083 0046 6C6F6E67 		.ascii	"long unsigned int\000"
- 1083      20756E73 
- 1083      69676E65 
- 1083      6420696E 
- 1083      7400
- 1084              	.LASF28:
- 1085 0058 75696E74 		.ascii	"uint8\000"
- 1085      3800
- 1086              	.LASF17:
- 1087 005e 5F646972 		.ascii	"_dirR_Write\000"
- 1087      525F5772 
- 1087      69746500 
- 1088              	.LASF23:
- 1089 006a 426C7565 		.ascii	"BlueLED_Write\000"
- 1089      4C45445F 
- 1089      57726974 
- 1089      6500
- 1090              	.LASF10:
- 1091 0078 646F7562 		.ascii	"double\000"
- 1091      6C6500
- 1092              	.LASF30:
- 1093 007f 6D61696E 		.ascii	"main\000"
- 1093      00
- 1094              	.LASF18:
- 1095 0084 5F637572 		.ascii	"_currentSpeed\000"
- 1095      72656E74 
- 1095      53706565 
- 1095      6400
- 1096              	.LASF21:
- 1097 0092 6D6F7665 		.ascii	"moveTog\000"
- 1097      546F6700 
- 1098              	.LASF8:
- 1099 009a 756E7369 		.ascii	"unsigned int\000"
- 1099      676E6564 
- 1099      20696E74 
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 23
+ 1070 009a 0E       		.uleb128 0xe
+ 1071 009b 3A       		.uleb128 0x3a
+ 1072 009c 0B       		.uleb128 0xb
+ 1073 009d 3B       		.uleb128 0x3b
+ 1074 009e 0B       		.uleb128 0xb
+ 1075 009f 49       		.uleb128 0x49
+ 1076 00a0 13       		.uleb128 0x13
+ 1077 00a1 02       		.uleb128 0x2
+ 1078 00a2 18       		.uleb128 0x18
+ 1079 00a3 00       		.byte	0
+ 1080 00a4 00       		.byte	0
+ 1081 00a5 0D       		.uleb128 0xd
+ 1082 00a6 34       		.uleb128 0x34
+ 1083 00a7 00       		.byte	0
+ 1084 00a8 03       		.uleb128 0x3
+ 1085 00a9 0E       		.uleb128 0xe
+ 1086 00aa 3A       		.uleb128 0x3a
+ 1087 00ab 0B       		.uleb128 0xb
+ 1088 00ac 3B       		.uleb128 0x3b
+ 1089 00ad 0B       		.uleb128 0xb
+ 1090 00ae 49       		.uleb128 0x49
+ 1091 00af 13       		.uleb128 0x13
+ 1092 00b0 02       		.uleb128 0x2
+ 1093 00b1 18       		.uleb128 0x18
+ 1094 00b2 00       		.byte	0
+ 1095 00b3 00       		.byte	0
+ 1096 00b4 0E       		.uleb128 0xe
+ 1097 00b5 898201   		.uleb128 0x4109
+ 1098 00b8 01       		.byte	0x1
+ 1099 00b9 11       		.uleb128 0x11
+ 1100 00ba 01       		.uleb128 0x1
+ 1101 00bb 31       		.uleb128 0x31
+ 1102 00bc 13       		.uleb128 0x13
+ 1103 00bd 01       		.uleb128 0x1
+ 1104 00be 13       		.uleb128 0x13
+ 1105 00bf 00       		.byte	0
+ 1106 00c0 00       		.byte	0
+ 1107 00c1 0F       		.uleb128 0xf
+ 1108 00c2 8A8201   		.uleb128 0x410a
+ 1109 00c5 00       		.byte	0
+ 1110 00c6 02       		.uleb128 0x2
+ 1111 00c7 18       		.uleb128 0x18
+ 1112 00c8 9142     		.uleb128 0x2111
+ 1113 00ca 18       		.uleb128 0x18
+ 1114 00cb 00       		.byte	0
+ 1115 00cc 00       		.byte	0
+ 1116 00cd 10       		.uleb128 0x10
+ 1117 00ce 898201   		.uleb128 0x4109
+ 1118 00d1 00       		.byte	0
+ 1119 00d2 11       		.uleb128 0x11
+ 1120 00d3 01       		.uleb128 0x1
+ 1121 00d4 9342     		.uleb128 0x2113
+ 1122 00d6 18       		.uleb128 0x18
+ 1123 00d7 00       		.byte	0
+ 1124 00d8 00       		.byte	0
+ 1125 00d9 11       		.uleb128 0x11
+ 1126 00da 898201   		.uleb128 0x4109
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 24
 
 
- 1099      00
- 1100              	.LASF14:
- 1101 00a7 5F70776D 		.ascii	"_pwmL_Write\000"
- 1101      4C5F5772 
- 1101      69746500 
- 1102              	.LASF27:
- 1103 00b3 433A5C55 		.ascii	"C:\\Users\\sabri\\Documents\\PSoC Creator\\Test\\Mo"
- 1103      73657273 
- 1103      5C736162 
- 1103      72695C44 
- 1103      6F63756D 
- 1104 00e0 746F7243 		.ascii	"torControl.cydsn\000"
- 1104      6F6E7472 
- 1104      6F6C2E63 
- 1104      7964736E 
- 1104      00
- 1105              	.LASF7:
- 1106 00f1 6C6F6E67 		.ascii	"long long unsigned int\000"
- 1106      206C6F6E 
- 1106      6720756E 
- 1106      7369676E 
- 1106      65642069 
- 1107              	.LASF25:
- 1108 0108 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
- 1108      43313120 
- 1108      352E342E 
- 1108      31203230 
- 1108      31363036 
- 1109 013b 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
- 1109      20726576 
- 1109      6973696F 
- 1109      6E203233 
- 1109      37373135 
- 1110 016e 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
- 1110      66756E63 
- 1110      74696F6E 
- 1110      2D736563 
- 1110      74696F6E 
- 1111              	.LASF19:
- 1112 0196 73706565 		.ascii	"speed\000"
- 1112      6400
- 1113              	.LASF12:
- 1114 019c 73697A65 		.ascii	"sizetype\000"
- 1114      74797065 
- 1114      00
- 1115              	.LASF6:
- 1116 01a5 6C6F6E67 		.ascii	"long long int\000"
- 1116      206C6F6E 
- 1116      6720696E 
- 1116      7400
- 1117              	.LASF26:
- 1118 01b3 6D61696E 		.ascii	"main.c\000"
- 1118      2E6300
- 1119              	.LASF11:
- 1120 01ba 63686172 		.ascii	"char\000"
- 1120      00
- 1121              	.LASF2:
-ARM GAS  C:\Users\sabri\AppData\Local\Temp\cctrGlH4.s 			page 24
+ 1127 00dd 01       		.byte	0x1
+ 1128 00de 11       		.uleb128 0x11
+ 1129 00df 01       		.uleb128 0x1
+ 1130 00e0 9342     		.uleb128 0x2113
+ 1131 00e2 18       		.uleb128 0x18
+ 1132 00e3 01       		.uleb128 0x1
+ 1133 00e4 13       		.uleb128 0x13
+ 1134 00e5 00       		.byte	0
+ 1135 00e6 00       		.byte	0
+ 1136 00e7 12       		.uleb128 0x12
+ 1137 00e8 898201   		.uleb128 0x4109
+ 1138 00eb 01       		.byte	0x1
+ 1139 00ec 11       		.uleb128 0x11
+ 1140 00ed 01       		.uleb128 0x1
+ 1141 00ee 9342     		.uleb128 0x2113
+ 1142 00f0 18       		.uleb128 0x18
+ 1143 00f1 00       		.byte	0
+ 1144 00f2 00       		.byte	0
+ 1145 00f3 13       		.uleb128 0x13
+ 1146 00f4 2E       		.uleb128 0x2e
+ 1147 00f5 01       		.byte	0x1
+ 1148 00f6 3F       		.uleb128 0x3f
+ 1149 00f7 19       		.uleb128 0x19
+ 1150 00f8 03       		.uleb128 0x3
+ 1151 00f9 0E       		.uleb128 0xe
+ 1152 00fa 3A       		.uleb128 0x3a
+ 1153 00fb 0B       		.uleb128 0xb
+ 1154 00fc 3B       		.uleb128 0x3b
+ 1155 00fd 0B       		.uleb128 0xb
+ 1156 00fe 27       		.uleb128 0x27
+ 1157 00ff 19       		.uleb128 0x19
+ 1158 0100 49       		.uleb128 0x49
+ 1159 0101 13       		.uleb128 0x13
+ 1160 0102 8701     		.uleb128 0x87
+ 1161 0104 19       		.uleb128 0x19
+ 1162 0105 11       		.uleb128 0x11
+ 1163 0106 01       		.uleb128 0x1
+ 1164 0107 12       		.uleb128 0x12
+ 1165 0108 06       		.uleb128 0x6
+ 1166 0109 40       		.uleb128 0x40
+ 1167 010a 18       		.uleb128 0x18
+ 1168 010b 9742     		.uleb128 0x2117
+ 1169 010d 19       		.uleb128 0x19
+ 1170 010e 01       		.uleb128 0x1
+ 1171 010f 13       		.uleb128 0x13
+ 1172 0110 00       		.byte	0
+ 1173 0111 00       		.byte	0
+ 1174 0112 14       		.uleb128 0x14
+ 1175 0113 34       		.uleb128 0x34
+ 1176 0114 00       		.byte	0
+ 1177 0115 03       		.uleb128 0x3
+ 1178 0116 08       		.uleb128 0x8
+ 1179 0117 3A       		.uleb128 0x3a
+ 1180 0118 0B       		.uleb128 0xb
+ 1181 0119 3B       		.uleb128 0x3b
+ 1182 011a 0B       		.uleb128 0xb
+ 1183 011b 49       		.uleb128 0x49
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 25
 
 
- 1122 01bf 73686F72 		.ascii	"short int\000"
- 1122      7420696E 
- 1122      7400
- 1123              	.LASF16:
- 1124 01c9 5F646972 		.ascii	"_dirL_Write\000"
- 1124      4C5F5772 
- 1124      69746500 
- 1125              	.LASF29:
- 1126 01d5 4D6F746F 		.ascii	"MotorController\000"
- 1126      72436F6E 
- 1126      74726F6C 
- 1126      6C657200 
- 1127              	.LASF4:
- 1128 01e5 6C6F6E67 		.ascii	"long int\000"
- 1128      20696E74 
- 1128      00
- 1129              	.LASF13:
- 1130 01ee 6C6F6E67 		.ascii	"long double\000"
- 1130      20646F75 
- 1130      626C6500 
- 1131              	.LASF0:
- 1132 01fa 7369676E 		.ascii	"signed char\000"
- 1132      65642063 
- 1132      68617200 
- 1133              	.LASF20:
- 1134 0206 6E657444 		.ascii	"netDir\000"
- 1134      697200
- 1135              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
+ 1184 011c 13       		.uleb128 0x13
+ 1185 011d 02       		.uleb128 0x2
+ 1186 011e 18       		.uleb128 0x18
+ 1187 011f 00       		.byte	0
+ 1188 0120 00       		.byte	0
+ 1189 0121 15       		.uleb128 0x15
+ 1190 0122 898201   		.uleb128 0x4109
+ 1191 0125 01       		.byte	0x1
+ 1192 0126 11       		.uleb128 0x11
+ 1193 0127 01       		.uleb128 0x1
+ 1194 0128 31       		.uleb128 0x31
+ 1195 0129 13       		.uleb128 0x13
+ 1196 012a 00       		.byte	0
+ 1197 012b 00       		.byte	0
+ 1198 012c 16       		.uleb128 0x16
+ 1199 012d 34       		.uleb128 0x34
+ 1200 012e 00       		.byte	0
+ 1201 012f 03       		.uleb128 0x3
+ 1202 0130 0E       		.uleb128 0xe
+ 1203 0131 3A       		.uleb128 0x3a
+ 1204 0132 0B       		.uleb128 0xb
+ 1205 0133 3B       		.uleb128 0x3b
+ 1206 0134 0B       		.uleb128 0xb
+ 1207 0135 49       		.uleb128 0x49
+ 1208 0136 13       		.uleb128 0x13
+ 1209 0137 3F       		.uleb128 0x3f
+ 1210 0138 19       		.uleb128 0x19
+ 1211 0139 02       		.uleb128 0x2
+ 1212 013a 18       		.uleb128 0x18
+ 1213 013b 00       		.byte	0
+ 1214 013c 00       		.byte	0
+ 1215 013d 17       		.uleb128 0x17
+ 1216 013e 2E       		.uleb128 0x2e
+ 1217 013f 00       		.byte	0
+ 1218 0140 3F       		.uleb128 0x3f
+ 1219 0141 19       		.uleb128 0x19
+ 1220 0142 3C       		.uleb128 0x3c
+ 1221 0143 19       		.uleb128 0x19
+ 1222 0144 6E       		.uleb128 0x6e
+ 1223 0145 0E       		.uleb128 0xe
+ 1224 0146 03       		.uleb128 0x3
+ 1225 0147 0E       		.uleb128 0xe
+ 1226 0148 3A       		.uleb128 0x3a
+ 1227 0149 0B       		.uleb128 0xb
+ 1228 014a 3B       		.uleb128 0x3b
+ 1229 014b 0B       		.uleb128 0xb
+ 1230 014c 00       		.byte	0
+ 1231 014d 00       		.byte	0
+ 1232 014e 00       		.byte	0
+ 1233              		.section	.debug_aranges,"",%progbits
+ 1234 0000 34000000 		.4byte	0x34
+ 1235 0004 0200     		.2byte	0x2
+ 1236 0006 00000000 		.4byte	.Ldebug_info0
+ 1237 000a 04       		.byte	0x4
+ 1238 000b 00       		.byte	0
+ 1239 000c 0000     		.2byte	0
+ 1240 000e 0000     		.2byte	0
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 26
+
+
+ 1241 0010 00000000 		.4byte	.LFB32
+ 1242 0014 2C000000 		.4byte	.LFE32-.LFB32
+ 1243 0018 00000000 		.4byte	.LFB33
+ 1244 001c 6E000000 		.4byte	.LFE33-.LFB33
+ 1245 0020 00000000 		.4byte	.LFB34
+ 1246 0024 2A000000 		.4byte	.LFE34-.LFB34
+ 1247 0028 00000000 		.4byte	.LFB35
+ 1248 002c 34010000 		.4byte	.LFE35-.LFB35
+ 1249 0030 00000000 		.4byte	0
+ 1250 0034 00000000 		.4byte	0
+ 1251              		.section	.debug_ranges,"",%progbits
+ 1252              	.Ldebug_ranges0:
+ 1253 0000 00000000 		.4byte	.LFB32
+ 1254 0004 2C000000 		.4byte	.LFE32
+ 1255 0008 00000000 		.4byte	.LFB33
+ 1256 000c 6E000000 		.4byte	.LFE33
+ 1257 0010 00000000 		.4byte	.LFB34
+ 1258 0014 2A000000 		.4byte	.LFE34
+ 1259 0018 00000000 		.4byte	.LFB35
+ 1260 001c 34010000 		.4byte	.LFE35
+ 1261 0020 00000000 		.4byte	0
+ 1262 0024 00000000 		.4byte	0
+ 1263              		.section	.debug_line,"",%progbits
+ 1264              	.Ldebug_line0:
+ 1265 0000 DC000000 		.section	.debug_str,"MS",%progbits,1
+ 1265      02005900 
+ 1265      00000201 
+ 1265      FB0E0D00 
+ 1265      01010101 
+ 1266              	.LASF26:
+ 1267 0000 73746F70 		.ascii	"stopMoving\000"
+ 1267      4D6F7669 
+ 1267      6E6700
+ 1268              	.LASF15:
+ 1269 000b 5F70776D 		.ascii	"_pwmR_Write\000"
+ 1269      525F5772 
+ 1269      69746500 
+ 1270              	.LASF27:
+ 1271 0017 73746174 		.ascii	"state\000"
+ 1271      6500
+ 1272              	.LASF28:
+ 1273 001d 6D6F7665 		.ascii	"move_cnt\000"
+ 1273      5F636E74 
+ 1273      00
+ 1274              	.LASF21:
+ 1275 0026 6D6F7665 		.ascii	"move\000"
+ 1275      00
+ 1276              	.LASF3:
+ 1277 002b 73686F72 		.ascii	"short unsigned int\000"
+ 1277      7420756E 
+ 1277      7369676E 
+ 1277      65642069 
+ 1277      6E7400
+ 1278              	.LASF9:
+ 1279 003e 666C6F61 		.ascii	"float\000"
+ 1279      7400
+ 1280              	.LASF1:
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 27
+
+
+ 1281 0044 756E7369 		.ascii	"unsigned char\000"
+ 1281      676E6564 
+ 1281      20636861 
+ 1281      7200
+ 1282              	.LASF5:
+ 1283 0052 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1283      20756E73 
+ 1283      69676E65 
+ 1283      6420696E 
+ 1283      7400
+ 1284              	.LASF32:
+ 1285 0064 75696E74 		.ascii	"uint8\000"
+ 1285      3800
+ 1286              	.LASF17:
+ 1287 006a 5F646972 		.ascii	"_dirR_Write\000"
+ 1287      525F5772 
+ 1287      69746500 
+ 1288              	.LASF10:
+ 1289 0076 646F7562 		.ascii	"double\000"
+ 1289      6C6500
+ 1290              	.LASF20:
+ 1291 007d 61646A4D 		.ascii	"adjMove\000"
+ 1291      6F766500 
+ 1292              	.LASF34:
+ 1293 0085 6D61696E 		.ascii	"main\000"
+ 1293      00
+ 1294              	.LASF22:
+ 1295 008a 73706565 		.ascii	"speedA\000"
+ 1295      644100
+ 1296              	.LASF23:
+ 1297 0091 73706565 		.ascii	"speedB\000"
+ 1297      644200
+ 1298              	.LASF18:
+ 1299 0098 5F637572 		.ascii	"_currentSpeed\000"
+ 1299      72656E74 
+ 1299      53706565 
+ 1299      6400
+ 1300              	.LASF8:
+ 1301 00a6 756E7369 		.ascii	"unsigned int\000"
+ 1301      676E6564 
+ 1301      20696E74 
+ 1301      00
+ 1302              	.LASF14:
+ 1303 00b3 5F70776D 		.ascii	"_pwmL_Write\000"
+ 1303      4C5F5772 
+ 1303      69746500 
+ 1304              	.LASF31:
+ 1305 00bf 433A5C55 		.ascii	"C:\\Users\\sabri\\Documents\\PSoC Creator\\Test\\Mo"
+ 1305      73657273 
+ 1305      5C736162 
+ 1305      72695C44 
+ 1305      6F63756D 
+ 1306 00ec 746F7243 		.ascii	"torControl.cydsn\000"
+ 1306      6F6E7472 
+ 1306      6F6C2E63 
+ 1306      7964736E 
+ 1306      00
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 28
+
+
+ 1307              	.LASF7:
+ 1308 00fd 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1308      206C6F6E 
+ 1308      6720756E 
+ 1308      7369676E 
+ 1308      65642069 
+ 1309              	.LASF29:
+ 1310 0114 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1310      43313120 
+ 1310      352E342E 
+ 1310      31203230 
+ 1310      31363036 
+ 1311 0147 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1311      20726576 
+ 1311      6973696F 
+ 1311      6E203233 
+ 1311      37373135 
+ 1312 017a 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1312      66756E63 
+ 1312      74696F6E 
+ 1312      2D736563 
+ 1312      74696F6E 
+ 1313              	.LASF19:
+ 1314 01a2 73706565 		.ascii	"speed\000"
+ 1314      6400
+ 1315              	.LASF12:
+ 1316 01a8 73697A65 		.ascii	"sizetype\000"
+ 1316      74797065 
+ 1316      00
+ 1317              	.LASF6:
+ 1318 01b1 6C6F6E67 		.ascii	"long long int\000"
+ 1318      206C6F6E 
+ 1318      6720696E 
+ 1318      7400
+ 1319              	.LASF30:
+ 1320 01bf 6D61696E 		.ascii	"main.c\000"
+ 1320      2E6300
+ 1321              	.LASF24:
+ 1322 01c6 64697241 		.ascii	"dirA\000"
+ 1322      00
+ 1323              	.LASF25:
+ 1324 01cb 64697242 		.ascii	"dirB\000"
+ 1324      00
+ 1325              	.LASF2:
+ 1326 01d0 73686F72 		.ascii	"short int\000"
+ 1326      7420696E 
+ 1326      7400
+ 1327              	.LASF16:
+ 1328 01da 5F646972 		.ascii	"_dirL_Write\000"
+ 1328      4C5F5772 
+ 1328      69746500 
+ 1329              	.LASF33:
+ 1330 01e6 4D6F746F 		.ascii	"MotorController\000"
+ 1330      72436F6E 
+ 1330      74726F6C 
+ 1330      6C657200 
+ 1331              	.LASF4:
+ARM GAS  C:\Users\sabri\AppData\Local\Temp\ccPBIRWp.s 			page 29
+
+
+ 1332 01f6 6C6F6E67 		.ascii	"long int\000"
+ 1332      20696E74 
+ 1332      00
+ 1333              	.LASF11:
+ 1334 01ff 63686172 		.ascii	"char\000"
+ 1334      00
+ 1335              	.LASF13:
+ 1336 0204 6C6F6E67 		.ascii	"long double\000"
+ 1336      20646F75 
+ 1336      626C6500 
+ 1337              	.LASF0:
+ 1338 0210 7369676E 		.ascii	"signed char\000"
+ 1338      65642063 
+ 1338      68617200 
+ 1339              	.LASF35:
+ 1340 021c 43794465 		.ascii	"CyDelay\000"
+ 1340      6C617900 
+ 1341              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
